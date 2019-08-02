@@ -39,7 +39,7 @@ class _CategoryCache:
         sql = """SELECT * FROM categories"""
 
         def read_category_by_id(id):
-            row = self.db.query_one("SELECT * FROM categories WHERE id = ?", (id, ))
+            row = self.db.query_one("SELECT * FROM categories WHERE id = ?", (id,))
             if row["parent"]:
                 parent = read_category_by_id(row["parent"])
             else:
@@ -48,9 +48,6 @@ class _CategoryCache:
 
         category_rows = self.db.query(sql)
         for row in category_rows:
-            id = row["id"]
-            version = row["version"]
-            name = row["name"]
             parent_id = row["parent"]
             if parent_id:
                 parent = read_category_by_id(parent_id)
@@ -62,37 +59,43 @@ class _CategoryCache:
 
 
 class _CategoryRepository(CategoryRepository):
-    """TODO: Implement"""
-
-    def __init__(self, db):
+    def __init__(self, db, cache):
         self.db = db
+        self._cache = cache
         self._create_tables()
 
     def get_category(self, qualified_name):
-        names = qualified_name.split("::")
-        next_parent = None
-        for name in names:
-            row = self.db.query_one("SELECT * FROM categories WHERE name = ? ", (name,))
-            category = Category(row["id"], row["version"], row["name"], next_parent)
-            next_parent = category
-        return category
+        if self._cache:
+            return self._cache.get_category_by_qualified_name(qualified_name)
+        else:
+            names = qualified_name.split("::")
+            next_parent = None
+            for name in names:
+                row = self.db.query_one("SELECT * FROM categories WHERE name = ? ", (name,))
+                category = Category(row["id"], row["version"], row["name"], next_parent)
+                next_parent = category
+            return category
 
     def get_all_categories(self):
-        categories = []
+        if self._cache:
+            return self._cache.get_categories()
+        else:
+            categories = []
 
-        # First construct all categories with parent id's (since the parent may not be constructed yet)
-        for row in self.db.query("SELECT * FROM categories"):
-            categories.append(Category(row["id"], row["version"], row["name"], row["parent"]))
+            # First construct all categories with parent id's (since the parent may not be constructed yet)
+            for row in self.db.query("SELECT * FROM categories"):
+                categories.append(Category(row["id"], row["version"], row["name"], row["parent"]))
 
-        # Then resolve the parents
-        for category in categories:
-            if category.parent:
-                parents = [cat for cat in categories if cat.id == category.parent]
-                if len(parents) != 1:
-                    raise ValueError("Category (%s) should have exactly 1 parent, but has %d (%s)",
-                                     category, len(parents), parents)
-            else:
-                category.parent = None
+            # Then resolve the parents
+            for category in categories:
+                if category.parent:
+                    parents = [cat for cat in categories if cat.id == category.parent]
+                    if len(parents) != 1:
+                        raise ValueError("Category (%s) should have exactly 1 parent, but has %d (%s)",
+                                         category, len(parents), parents)
+                else:
+                    category.parent = None
+            return categories
 
     def _create_tables(self):
         sql_create_categories_table = """CREATE TABLE IF NOT EXISTS categories (
@@ -106,11 +109,6 @@ class _CategoryRepository(CategoryRepository):
 
 
 class _CategoryFactory(CategoryFactory):
-    """
-    TODO: This factory may create multiple objects representing the same category
-          (not sure whether this becomes a problem).
-    """
-
     def __init__(self, db, cache):
         self._db = db
         self._cache = cache
@@ -138,7 +136,7 @@ class _CategoryFactory(CategoryFactory):
 
 
 _category_cache = _CategoryCache(get_database())
-_category_repository = _CategoryRepository(get_database())
+_category_repository = _CategoryRepository(get_database(), _category_cache)
 _category_factory = _CategoryFactory(get_database(), _category_cache)
 _category_cache.init_cache()
 
