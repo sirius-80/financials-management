@@ -91,19 +91,19 @@ class _AccountRepository(AccountRepository):
     def update_transaction(self, transaction):
         cursor = self.db.connection.cursor()
         cursor.execute(
-            "UPDATE transactions SET"
-            "version=?,"
-            "amount=?,"
-            "date=?,"
-            "name=?,"
-            "description=?,"
-            "balance=?,"
-            "serial=?,"
-            "counter_account=?,"
-            "reference=?,"
-            "account=?,"
-            "category=?"
-            "WHERE id=?",
+            "UPDATE transactions SET "
+            "version=?, "
+            "amount=?, "
+            "date=?, "
+            "name=?, "
+            "description=?, "
+            "balance_after=?, "
+            "serial=?, "
+            "counter_account=?, "
+            "reference=?, "
+            "account=?, "
+            "category=? "
+            "WHERE id=? ",
             (transaction.version,
              transaction._amount,
              transaction.date,
@@ -114,6 +114,7 @@ class _AccountRepository(AccountRepository):
              transaction.counter_account,
              transaction.reference,
              transaction.account.id,
+             transaction.category.id,
              transaction.id))
         self._cache.update_transaction(transaction)
         return transaction

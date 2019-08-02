@@ -4,6 +4,63 @@ from account_management.domain.model.category import CategoryRepository, Categor
 from infrastructure.repositories import get_database
 
 
+class _CategoryCache:
+    def __init__(self, db):
+        self.db = db
+        self.categories = {}
+
+    def update_category(self, category):
+        if category.qualified_name not in self.categories.keys():
+            self.categories[category.qualified_name] = category
+        stored = category
+        stored.__dict__ = category.__dict__
+        # logger.debug("Updated category: %s (cached = %s)", stored, self.categories)
+        return stored
+
+    def get_categories(self):
+        # logger.debug("Getting categories from cache: %s (size=%d)", self.categories, len(self.categories))
+        return self.accounts.values()
+
+    def get_category_by_qualified_name(self, qname):
+        # logger.debug("Getting category with qualified name %s from cache (%s)", qname, self.categories)
+        cached = next(iter(c for c in self.categories.values() if c.qualified_name == qname), None)
+        # logger.debug("Got from cache: %s", cached)
+        return cached
+
+    def get_category_by_id(self, id):
+        for cat in self.categories.values():
+            if cat.id == id:
+                return cat
+        else:
+            return None
+
+    def init_cache(self):
+        # logger.info("Initializing cache...")
+        sql = """SELECT * FROM categories"""
+
+        def read_category_by_id(id):
+            row = self.db.query_one("SELECT * FROM categories WHERE id = ?", (id, ))
+            if row["parent"]:
+                parent = read_category_by_id(row["parent"])
+            else:
+                parent = None
+            return Category(row["id"], row["version"], row["name"], parent)
+
+        category_rows = self.db.query(sql)
+        for row in category_rows:
+            id = row["id"]
+            version = row["version"]
+            name = row["name"]
+            parent_id = row["parent"]
+            if parent_id:
+                parent = read_category_by_id(parent_id)
+            else:
+                parent = None
+            category = Category(row["id"], row["version"], row["name"], parent)
+            self.update_category(category)
+        # logger.info("Cache initialized...")
+
+
 class _CategoryRepository(CategoryRepository):
     """TODO: Implement"""
 
@@ -15,7 +72,7 @@ class _CategoryRepository(CategoryRepository):
         names = qualified_name.split("::")
         next_parent = None
         for name in names:
-            row = self.db.query_one("SELECT * FROM category WHERE name = ? ", (name,))
+            row = self.db.query_one("SELECT * FROM categories WHERE name = ? ", (name,))
             category = Category(row["id"], row["version"], row["name"], next_parent)
             next_parent = category
         return category
@@ -42,7 +99,7 @@ class _CategoryRepository(CategoryRepository):
                                             id text PRIMARY KEY,
                                             version integer NOT NULL,
                                             name text NOT NULL,
-                                            parent text
+                                            parent text,
                                             FOREIGN KEY (parent) REFERENCES categories (id)
                                             );"""
         self.db.connection.cursor().execute(sql_create_categories_table)
@@ -54,18 +111,22 @@ class _CategoryFactory(CategoryFactory):
           (not sure whether this becomes a problem).
     """
 
-    def __init__(self, db):
-        self.db = db
+    def __init__(self, db, cache):
+        self._db = db
+        self._cache = cache
 
     def create_category(self, name, parent=None):
-        category = Category(uuid.uuid4().hex, 0, name, parent)
-        cursor = self.db.connection.cursor()
-        if parent:
-            cursor.execute("INSERT INTO categories (id, version, name, parent)",
-                           (category.id, category.version, category.name, category.parent.name))
-        else:
-            cursor.execute("INSERT INTO categories (id, version, name)",
-                           (category.id, category.version, category.name))
+        _temp_category = Category(uuid.uuid4().hex, 0, name, parent)
+        category = self._cache.get_category_by_qualified_name(_temp_category.qualified_name)
+        if not category:
+            category = Category(uuid.uuid4().hex, 0, name, parent)
+            cursor = self._db.connection.cursor()
+            if parent:
+                cursor.execute("INSERT INTO categories (id, version, name, parent) VALUES (?, ?, ?, ?)",
+                               (category.id, category.version, category.name, category.parent.id))
+            else:
+                cursor.execute("INSERT INTO categories (id, version, name) VALUES (?, ?, ?)",
+                               (category.id, category.version, category.name))
         return category
 
     def create_category_from_qualified_name(self, qualified_name):
@@ -76,8 +137,10 @@ class _CategoryFactory(CategoryFactory):
         return category
 
 
+_category_cache = _CategoryCache(get_database())
 _category_repository = _CategoryRepository(get_database())
-_category_factory = _CategoryFactory(get_database())
+_category_factory = _CategoryFactory(get_database(), _category_cache)
+_category_cache.init_cache()
 
 
 def get_category_repository():

@@ -23,8 +23,6 @@ def get_or_create_account(account_name, bank):
 
 def import_transactions_csv(filename, bank):
     """Parses given csv-file export from given bank into the database (resulting in accounts and transactions).
-
-    TODO: Migrate from float to integer for amount.
     """
     logger.info("Importing %s", filename)
     with open(filename, encoding="ISO-8859-1") as csvfile:

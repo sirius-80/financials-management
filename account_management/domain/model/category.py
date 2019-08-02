@@ -2,13 +2,13 @@ from account_management.domain.model import Entity
 
 
 class Category(Entity):
-    def __init__(self, category_id, category_version, qualified_name, parent):
+    def __init__(self, category_id, category_version, name, parent):
         super().__init__(category_id, category_version)
-        self.qualified_name = qualified_name
+        self.name = name
         self.parent = parent
 
     @property
-    def name(self):
+    def qualified_name(self):
         return repr(self)
 
     def __repr__(self):
