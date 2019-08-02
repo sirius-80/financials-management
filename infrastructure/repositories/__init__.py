@@ -6,7 +6,8 @@ logger = logging.getLogger(__name__)
 
 class DatabaseSqlite3:
     def __init__(self):
-        self.connection = sqlite3.connect("bank-sqlite3.db")
+        self.connection = sqlite3.connect("bank-sqlite3.db",
+                                          detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
         self.connection.row_factory = sqlite3.Row
 
     def close(self):

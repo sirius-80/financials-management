@@ -78,10 +78,38 @@ class Account(Entity):
         return copy.copy(self.transactions)
 
 
-# class TransactionEvent:
-#     @initializer
-#     def __init__(self, _account, _serial, _date, _amount, _description, _counter_account, _balance_after, _reference):
-#         pass
+class TransactionCategorizedEvent:
+    def __init__(self, transaction, old_category, new_category):
+        self.transaction = transaction
+        self.old_category = old_category
+        self.new_category = new_category
+
+    def __repr__(self):
+        return "TransactionCategoryUpdatedEvent %s: %s => %s" % (self.transaction, self.old_category, self.new_category)
+
+
+class AccountCreatedEvent:
+    def __init__(self, account):
+        self.account = account
+
+    def __repr__(self):
+        return "AccountCreatedEvent %s" % (self.account, )
+
+
+class BankCreatedEvent:
+    def __init__(self, bank):
+        self.bank = bank
+
+    def __repr__(self):
+        return "BankCreatedEvent %s" % (self.bank, )
+
+
+class TransactionCreatedEvent:
+    def __init__(self, transaction):
+        self.transaction = transaction
+
+    def __repr__(self):
+        return "TransactionCreatedEvent %s" % (self.transaction, )
 
 
 class Transaction(Entity):
@@ -113,6 +141,7 @@ class Transaction(Entity):
             description=self.description)
 
     def update_category(self, category):
+        self.register_domain_event(TransactionCategorizedEvent(self, self.category, category))
         self.category = category
         self.version += 1
 
@@ -122,7 +151,7 @@ class Transaction(Entity):
 
     @balance_after.setter
     def balance_after(self, value):
-        self._balance_after = value * decimal(100)
+        self._balance_after = int(decimal.Decimal(value) * decimal(100))
 
     @property
     def amount(self):
@@ -130,7 +159,7 @@ class Transaction(Entity):
 
     @amount.setter
     def amount(self, value):
-        self._amount = decimal.Decimal(value) * decimal.Decimal(100)
+        self._amount = int(decimal.Decimal(value) * decimal.Decimal(100))
 
 
 class AccountRepository:
@@ -140,9 +169,6 @@ class AccountRepository:
         raise NotImplementedError
 
     def update_transaction(self, transaction):
-        raise NotImplementedError
-
-    def update_account(self, account):
         raise NotImplementedError
 
     def get_account_by_id(self, id):

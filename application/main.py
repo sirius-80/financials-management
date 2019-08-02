@@ -1,22 +1,23 @@
 import logging
 
+import pubsub.pub
+
 import infrastructure.services.afas
 import infrastructure.repositories.category_repository
 import infrastructure.repositories.account_repository
 from application import rabo_csv_importer
-from application.transaction_mapping import map_transactions, CategoryCleanupTransactionMapper
+from application.transaction_mapping import map_transactions, CategoryCleanupTransactionMapper, map_transaction
 
 RABOBANK_TWENTE_OOST = "Rabobank Twente Oost"
 logger = logging.getLogger(__name__)
 
 
-def import_transactions(account_repository, account_factory):
+def import_transactions(account_repository, account_factory, filename_list):
     bank = account_repository.get_bank_by_name(RABOBANK_TWENTE_OOST)
     if not bank:
         bank = account_factory.create_bank(RABOBANK_TWENTE_OOST)
 
-    # for csv in ["transacties-20190101-to-20190719.csv", "transacties-20190501-to-20190725.csv"]:
-    for csv in ["transacties-20120101-to-20190430.csv", "transacties-20190501-to-20190725.csv"]:
+    for csv in filename_list:
         rabo_csv_importer.import_transactions_csv(csv, bank)
 
 
@@ -120,22 +121,32 @@ def generate_categories(category_factory):
     category_factory.create_category_from_qualified_name("Overboekingen")
 
 
-def cleanup_mapped_categories():
-    cleanup_transaction_mapper = CategoryCleanupTransactionMapper(
-        infrastructure.repositories.category_repository.get_category_repository())
-    map_transactions(cleanup_transaction_mapper, account_repository)
+def transaction_categorized_event_listener(event):
+    logger.debug("%s received: Category %s => %s for transaction %s", event.__class__.__name__, event.old_category,
+                 event.new_category, event.transaction)
 
 
-def map_transactions_afas_based():
-    afas_transaction_mapper = infrastructure.services.afas.get_afas_mapper("AFAS2.csv",
-                                                                           infrastructure.repositories.category_repository.get_category_repository())
-    map_transactions(afas_transaction_mapper, account_repository)
+def on_transaction_created_event(event):
+    logger.info("Categorizing new transaction: %s", event.transaction)
+    map_transaction(event.transaction, pattern_transaction_mapper, account_repository)
+    map_transaction(event.transaction, cleanup_transaction_mapper, account_repository)
 
 
-def map_transactions_pattern_based():
-    pattern_transaction_mapper = infrastructure.services.get_pattern_mapper("mapping.csv",
-                                                                            infrastructure.repositories.category_repository.get_category_repository())
-    map_transactions(pattern_transaction_mapper, account_repository)
+def initialize_database_when_empty(filename_list):
+    if not account_repository.get_accounts():
+        import_transactions(account_repository, factory, filename_list)
+        # Only map transactions en-mass upon import
+        map_transactions(pattern_transaction_mapper, account_repository)
+        map_transactions(afas_transaction_mapper, account_repository, update=True)
+        map_transactions(cleanup_transaction_mapper, account_repository, update=True)
+
+
+def log_current_account_info():
+    logger.debug("accounts: %s", account_repository.get_accounts())
+    for account in account_repository.get_accounts():
+        last_date = account.get_last_transaction_date()
+        logger.warning("Account: %s (%s): %s => € %8s", account.name, account.id, last_date,
+                       account.get_last_transaction_at_or_before(last_date).balance_after)
 
 
 if __name__ == "__main__":
@@ -143,26 +154,29 @@ if __name__ == "__main__":
     logging.basicConfig(format=FORMAT)
     logging.getLogger("").setLevel(logging.DEBUG)
 
+    pubsub.pub.subscribe(transaction_categorized_event_listener, "TransactionCategorizedEvent")
+    pubsub.pub.subscribe(on_transaction_created_event, "TransactionCreatedEvent")
+
+    generate_categories(infrastructure.repositories.category_repository.get_category_factory())
+    pattern_transaction_mapper = infrastructure.services.get_pattern_mapper("mapping.csv",
+                                                                            infrastructure.repositories.category_repository.get_category_repository())
+    afas_transaction_mapper = infrastructure.services.afas.get_afas_mapper("AFAS2.csv",
+                                                                           infrastructure.repositories.category_repository.get_category_repository())
+    cleanup_transaction_mapper = CategoryCleanupTransactionMapper(
+        infrastructure.repositories.category_repository.get_category_repository())
+
     # TODO: Control caching from cmd-line parameter?
     infrastructure.repositories.account_repository.enable_cache()
 
     account_repository = infrastructure.repositories.account_repository.get_account_repository()
     factory = infrastructure.repositories.account_repository.get_account_factory()
 
-    if not account_repository.get_accounts():
-        import_transactions(account_repository, factory)
-        # Only map transactions en-mass upon import
-        map_transactions_pattern_based()
-        map_transactions_afas_based()
-        cleanup_mapped_categories()
+    initialize_database_when_empty(["transacties-20120101-to-20190430.csv", "transacties-20190501-to-20190725.csv"])
 
-    generate_categories(infrastructure.repositories.category_repository.get_category_factory())
-
-    logger.debug("accounts: %s", account_repository.get_accounts())
-    for account in account_repository.get_accounts():
-        last_date = account.get_last_transaction_date()
-        logger.warning("Account: %s (%s): %s => € %8s", account.name, account.id, last_date,
-                       account.get_last_transaction_at_or_before(last_date).balance_after)
+    log_current_account_info()
 
     # Store changes in the database
     infrastructure.repositories.get_database().connection.commit()
+
+    import_transactions(account_repository, factory, ["transacties-20190501-to-20190801.csv"])
+    log_current_account_info()

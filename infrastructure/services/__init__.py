@@ -16,7 +16,7 @@ class _PatternTransactionCategoryMapper(TransactionCategoryMapper):
                 descr = row["Description"]
                 cat_name = row["Category"]
                 try:
-                    category = self.category_repository.get_category(cat_name)
+                    category = self.category_repository.get_category_by_qualified_name(cat_name)
                 except:
                     print("Failed to get category for", cat_name)
                     raise

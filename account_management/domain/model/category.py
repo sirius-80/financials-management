@@ -22,7 +22,7 @@ class Category(Entity):
 class CategoryRepository:
     """Abstract class. Override with specific infrastructure."""
 
-    def get_category(self, qualified_name):
+    def get_category_by_qualified_name(self, qualified_name):
         raise NotImplementedError
 
     def get_all_categories(self):

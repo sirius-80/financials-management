@@ -31,10 +31,10 @@ def parse_csv(filename, category_repo):
 
                 category = None
                 try:
-                    category = category_repo.get_category("Uitgaven::" + cat + "::" + subcat)
+                    category = category_repo.get_category_by_qualified_name("Uitgaven::" + cat + "::" + subcat)
                 except:
                     try:
-                        category = category_repo.get_category(cat + "::" + subcat)
+                        category = category_repo.get_category_by_qualified_name(cat + "::" + subcat)
                     except:
                         print("Failed to get category for %s::%s" % (cat, subcat))
                         raise

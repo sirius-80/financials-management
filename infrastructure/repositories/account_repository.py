@@ -2,8 +2,10 @@ import decimal
 import logging
 import uuid
 
-from account_management.domain.model.account import AccountRepository, Account, Bank, Transaction, AccountFactory
-from infrastructure.repositories import get_database
+from account_management.domain.model.account import AccountRepository, Account, Bank, Transaction, AccountFactory, \
+    AccountCreatedEvent, BankCreatedEvent, TransactionCreatedEvent
+from infrastructure import publish_domain_events
+from infrastructure.repositories import get_database, category_repository
 
 logger = logging.getLogger(__name__)
 
@@ -69,10 +71,11 @@ class _AccountCache:
 
             logger.debug("Fetching transactions for account %s", account)
             for trow in self.db.query("SELECT * FROM transactions WHERE account = ?", (account.id,)):
+                category = category_repository.get_category_repository().get_category(trow["category"])
                 account.add_transaction(Transaction(trow["id"], trow["version"], account, trow["serial"], trow["date"],
                                                     trow["amount"], trow["name"], trow["description"],
                                                     trow["counter_account"], trow["balance_after"], trow["reference"],
-                                                    trow["category"]))
+                                                    category))
 
             self.update_account(account)
         logger.info("Cache initialized...")
@@ -117,15 +120,8 @@ class _AccountRepository(AccountRepository):
              transaction.category.id,
              transaction.id))
         self._cache.update_transaction(transaction)
+        publish_domain_events(transaction.flush_domain_events())
         return transaction
-
-    def update_account(self, account):
-        cursor = self.db.connection.cursor()
-        cursor.execute("UPDATE accounts SET version=?, name=?, bank=? WHERE id=?",
-                       (account.version, account.name, account.bank.id, account.id))
-        if self._cache:
-            self._cache.update_account(account)
-        return account
 
     def get_accounts(self):
         if self._cache:
@@ -137,7 +133,7 @@ class _AccountRepository(AccountRepository):
             for row in account_rows:
                 bank = self.get_bank_by_id(row["bank"])
                 account = Account(row["id"], row["version"], row["name"], bank)
-                accounts.append(self._update_transactions(account))
+                accounts.append(self._collect_transactions(account))
             return accounts
 
     def get_bank_by_id(self, id):
@@ -161,7 +157,7 @@ class _AccountRepository(AccountRepository):
                 bank_id = row["bank"]
                 bank = self.get_bank_by_id(bank_id)
                 account = Account(account_id, row["version"], row["name"], bank)
-                return self._update_transactions(account)
+                return self._collect_transactions(account)
             else:
                 return None
 
@@ -173,11 +169,11 @@ class _AccountRepository(AccountRepository):
             if row:
                 bank = self.get_bank_by_id(row["bank"])
                 account = Account(row["id"], row["version"], row["name"], bank)
-                return self._update_transactions(account)
+                return self._collect_transactions(account)
             else:
                 return None
 
-    def _update_transactions(self, account):
+    def _collect_transactions(self, account):
         logger.debug("Fetching transactions for account %s", account)
         for trow in self.db.query("SELECT * FROM transactions WHERE account = ?", (account.id,)):
             account.add_transaction(Transaction(trow["id"], trow["version"], account, trow["serial"], trow["date"],
@@ -231,28 +227,35 @@ class _AccountFactory(AccountFactory):
     def create_account(self, name, bank):
         logger.debug("Creating account: %s (%s)", name, bank)
         account = Account(uuid.uuid4().hex, 0, name, bank)
+        account.register_domain_event(AccountCreatedEvent(account))
         cursor = self.db.connection.cursor()
         cursor.execute("INSERT INTO accounts (id, version, name, bank) VALUES (?,?,?,?)",
                        (account.id, account.version, account.name, account.bank.id))
         if self._cache:
             self._cache.update_account(account)
+
+        publish_domain_events(account.flush_domain_events())
         return account
 
     def create_bank(self, name):
         logger.debug("Creating bank: %s", name)
         bank = Bank(uuid.uuid4().hex, 0, name)
+        bank.register_domain_event(BankCreatedEvent(bank))
         cursor = self.db.connection.cursor()
         logger.debug("Creating bank: %s", bank)
         cursor.execute("INSERT INTO banks (id, version, name) VALUES (?,?,?)", (bank.id, bank.version, bank.name))
         if self._cache:
             self._cache.update_bank(bank)
+
+        publish_domain_events(bank.flush_domain_events())
         return bank
 
     def create_transaction(self, account, date, amount, name, description, serial, counter_account, balance_after,
                            reference):
-        transaction = Transaction(uuid.uuid4().hex, 0, account, serial, date, amount * decimal.Decimal(100), name,
+        transaction = Transaction(uuid.uuid4().hex, 0, account, serial, date, int(amount * decimal.Decimal(100)), name,
                                   description,
-                                  counter_account, balance_after * decimal.Decimal(100), reference, category=None)
+                                  counter_account, int(balance_after * decimal.Decimal(100)), reference, category=None)
+        transaction.register_domain_event(TransactionCreatedEvent(transaction))
         cursor = self.db.connection.cursor()
         cursor.execute("INSERT INTO transactions (id, version, amount, date, name, description, balance_after, serial,"
                        "counter_account, reference, account)"
@@ -263,6 +266,8 @@ class _AccountFactory(AccountFactory):
                         transaction.counter_account, transaction.reference, transaction.account.id))
         if self._cache:
             self._cache.update_transaction(transaction)
+
+        publish_domain_events(transaction.flush_domain_events())
         return transaction
 
 

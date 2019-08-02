@@ -27,7 +27,7 @@ class _CategoryCache:
         # logger.debug("Got from cache: %s", cached)
         return cached
 
-    def get_category_by_id(self, id):
+    def get_category(self, id):
         for cat in self.categories.values():
             if cat.id == id:
                 return cat
@@ -64,7 +64,7 @@ class _CategoryRepository(CategoryRepository):
         self._cache = cache
         self._create_tables()
 
-    def get_category(self, qualified_name):
+    def get_category_by_qualified_name(self, qualified_name):
         if self._cache:
             return self._cache.get_category_by_qualified_name(qualified_name)
         else:
@@ -75,6 +75,17 @@ class _CategoryRepository(CategoryRepository):
                 category = Category(row["id"], row["version"], row["name"], next_parent)
                 next_parent = category
             return category
+
+    def get_category(self, id):
+        if self._cache:
+            return self._cache.get_category(id)
+        else:
+            row = self.db.query_one("SELECT * FROM categories WHERE id = ?", (id, ))
+            if row["parent"]:
+                parent = self.get_category(row["parent"])
+            else:
+                parent = None
+            return Category(row["id"], row["version"], row["name"], parent)
 
     def get_all_categories(self):
         if self._cache:

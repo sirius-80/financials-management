@@ -13,16 +13,16 @@ class CategoryCleanupTransactionMapper(TransactionCategoryMapper):
 
     def __init__(self, category_repository):
         self.mapping = [
-            (category_repository.get_category("Uitgaven::Overige uitgaven::Overboekingen"),
-             category_repository.get_category("Overboekingen")),
-            (category_repository.get_category("Uitgaven::Telecom::Televisie"),
-             category_repository.get_category("Uitgaven::Telecom::Internet/TV")),
-            (category_repository.get_category("Uitgaven::Telecom::Internet"),
-             category_repository.get_category("Uitgaven::Telecom::Internet/TV")),
-            (category_repository.get_category("Uitgaven::Overige uitgaven::Abonnementen"),
-             category_repository.get_category("Uitgaven::Vrije tijd::Abonnementen")),
-            (category_repository.get_category("Inkomsten::Belastingtoeslagen"),
-             category_repository.get_category("Inkomsten::Belastingteruggaaf")),
+            (category_repository.get_category_by_qualified_name("Uitgaven::Overige uitgaven::Overboekingen"),
+             category_repository.get_category_by_qualified_name("Overboekingen")),
+            (category_repository.get_category_by_qualified_name("Uitgaven::Telecom::Televisie"),
+             category_repository.get_category_by_qualified_name("Uitgaven::Telecom::Internet/TV")),
+            (category_repository.get_category_by_qualified_name("Uitgaven::Telecom::Internet"),
+             category_repository.get_category_by_qualified_name("Uitgaven::Telecom::Internet/TV")),
+            (category_repository.get_category_by_qualified_name("Uitgaven::Overige uitgaven::Abonnementen"),
+             category_repository.get_category_by_qualified_name("Uitgaven::Vrije tijd::Abonnementen")),
+            (category_repository.get_category_by_qualified_name("Inkomsten::Belastingtoeslagen"),
+             category_repository.get_category_by_qualified_name("Inkomsten::Belastingteruggaaf")),
         ]
 
     def get_category_scores(self, transaction):
@@ -30,7 +30,7 @@ class CategoryCleanupTransactionMapper(TransactionCategoryMapper):
         if transaction.category:
             new_category = [mapping[1] for mapping in self.mapping if mapping[0] == transaction.category]
             if new_category:
-                category_scores.append(TransactionCategoryMapper.CategoryScore(new_category, self.DEFAULT_SCORE))
+                category_scores.append(TransactionCategoryMapper.CategoryScore(new_category[0], self.DEFAULT_SCORE))
         return category_scores
 
 
@@ -48,9 +48,16 @@ def map_transactions(transaction_mapper, account_repository, update=False):
     transactions will be processed."""
     for account in account_repository.get_accounts():
         for transaction in account.get_transactions():
-            category_scores = transaction_mapper.get_category_scores(transaction)
-            category = get_best_scoring_category(category_scores)
-            if category:
-                if update or not transaction.category:
-                    transaction.category = get_best_scoring_category(category_scores)
-                    account_repository.update_transaction(transaction)
+            map_transaction(transaction, transaction_mapper, account_repository, update)
+
+
+def map_transaction(transaction, transaction_mapper, account_repository, update=False):
+    """Map given transaction using given transaction_mapper. If the update flag is set to True, then transactions which
+    have already been mapped will be updated. If the update flag is False, only uncategorized transactions will be
+    processed."""
+    category_scores = transaction_mapper.get_category_scores(transaction)
+    category = get_best_scoring_category(category_scores)
+    if category:
+        if (update or not transaction.category) and transaction.category != category:
+            transaction.update_category(get_best_scoring_category(category_scores))
+            account_repository.update_transaction(transaction)
