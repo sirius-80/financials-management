@@ -106,5 +106,11 @@ class _AfasTransactionCategoryMapper(TransactionCategoryMapper):
             return None
 
 
+_afas_mapper = None
+
+
 def get_afas_mapper(mapping_file, category_repository):
-    return _AfasTransactionCategoryMapper(mapping_file, category_repository)
+    global _afas_mapper
+    if not _afas_mapper:
+        _afas_mapper = _AfasTransactionCategoryMapper(mapping_file, category_repository)
+    return _afas_mapper

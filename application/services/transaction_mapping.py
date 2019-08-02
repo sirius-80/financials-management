@@ -2,7 +2,10 @@ from account_management.domain.services import TransactionCategoryMapper
 
 
 class CategoryCleanupTransactionMapper(TransactionCategoryMapper):
-    """For all transactions, map
+    """A mapper that maps transactions from one specific category to another specific category.
+    Typically used to remove references to obsolete categories.
+
+    For all transactions, map
        * Uitgaven::Overige uitgaven::Overboekingen => Overboekingen
        * Uitgaven::Telecom::Televisie => Uitgaven::Telecom::Internet/TV
        * Uitgaven::Telecom::Internet => Uitgaven::Telecom::Internet/TV
@@ -35,6 +38,8 @@ class CategoryCleanupTransactionMapper(TransactionCategoryMapper):
 
 
 def get_best_scoring_category(category_score_list):
+    """Returns the best scoring category from given list of CategoryScore objects.
+    Returns None if given list is empty."""
     if category_score_list:
         category = next(iter(category_score_list)).category
     else:

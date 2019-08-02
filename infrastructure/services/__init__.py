@@ -47,5 +47,11 @@ class _PatternTransactionCategoryMapper(TransactionCategoryMapper):
         return sorted(matches, key=lambda cs: cs.score, reverse=True)
 
 
+_pattern_mapper = None
+
+
 def get_pattern_mapper(mapping_file, category_repository):
-    return _PatternTransactionCategoryMapper(mapping_file, category_repository)
+    global _pattern_mapper
+    if not _pattern_mapper:
+        _pattern_mapper = _PatternTransactionCategoryMapper(mapping_file, category_repository)
+    return _pattern_mapper
