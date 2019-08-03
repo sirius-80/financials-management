@@ -2,7 +2,7 @@ import pprint
 import logging
 
 import dateutil
-from bokeh.events import Tap
+from bokeh.events import Tap, PanEnd, PanStart
 from bokeh.layouts import column
 from bokeh.models import ColumnDataSource, HoverTool, TapTool, TableColumn, DateFormatter, NumberFormatter, \
     SelectEditor, DataTable, Select, WidgetBox
@@ -15,10 +15,11 @@ import infrastructure.repositories.account_repository
 logger = logging.getLogger(__name__)
 
 
-def get_category_plot(category=None):
+def get_category_plot(range_manager):
     date_list = application.services.get_transaction_date_range()
     category_repository = infrastructure.repositories.category_repository.get_category_repository()
     account_repository = infrastructure.repositories.account_repository.get_account_repository()
+    category = None
     amounts = [application.services.get_combined_amount_for_category_in_month(category, month) for month in date_list]
     settings = {'category': category,
                 'granularity': "Month",
@@ -41,14 +42,14 @@ def get_category_plot(category=None):
     fig.select(type=TapTool)
 
     columns = [
-        TableColumn(field="date", title="Date", formatter=DateFormatter()),
-        TableColumn(field="account", title="Account"),
-        TableColumn(field="amount", title="Amount", formatter=NumberFormatter(format='€ 0,0.00', text_align='right')),
+        TableColumn(field="date", title="Date", formatter=DateFormatter(), width=100),
+        TableColumn(field="account", title="Account", width=150),
+        TableColumn(field="amount", title="Amount", formatter=NumberFormatter(format='€ 0,0.00', text_align='right'), width=100),
         TableColumn(field="name", title="Name"),
         TableColumn(field="category", title="Category",
                     editor=SelectEditor(options=["None"] + [str(c) for c in category_repository.get_all_categories()])),
-        TableColumn(field="descr", title="Description"),
-        TableColumn(field="counter_account", title="Counter account")
+        TableColumn(field="descr", title="Description", width=800),
+        TableColumn(field="counter_account", title="Counter account", width=200)
     ]
     transaction_data = dict(
         date=[],
@@ -60,7 +61,7 @@ def get_category_plot(category=None):
         counter_account=[]
     )
     transaction_source = ColumnDataSource(transaction_data)
-    transactions_table = DataTable(source=transaction_source, columns=columns, width=1900, editable=True)
+    transactions_table = DataTable(source=transaction_source, columns=columns, width=1880, editable=True)
 
     def on_update_category(attr, old, new):
         logger.debug("on_update_category %s::%s => %s", attr, old, new)
@@ -105,9 +106,9 @@ def get_category_plot(category=None):
         else:
             end_date = start_date + dateutil.relativedelta.relativedelta(months=1)
         logger.debug("Selecting transactions between %s and %s", start_date, end_date)
-        selected_transactions = application.services.get_transactions_between(start_date, end_date,
-                                                                              category=category_repository.get_category_by_qualified_name(
-                                                                                  settings['category']))
+        selected_transactions = application.services.get_transactions_for_category_between(start_date, end_date,
+                                                                                           category=category_repository.get_category_by_qualified_name(
+                                                                                               settings['category']))
         settings['transactions'] = selected_transactions
         pprint.pprint(selected_transactions)
         data = dict()
@@ -156,5 +157,11 @@ def get_category_plot(category=None):
     date_range_selector = Select(title="Granularity", options=["Month", "Year"])
     date_range_selector.on_change('value', update_date_range)
     inputs = WidgetBox(category_selector, date_range_selector)
+
+    def on_pan(event):
+        range_manager.update_x_range(fig.x_range)
+
+    fig.on_event(PanEnd, on_pan)
+    range_manager.register_figure(fig)
 
     return column(fig, inputs, transactions_table)

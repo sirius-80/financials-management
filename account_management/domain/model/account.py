@@ -50,24 +50,24 @@ class Account(Entity):
         transaction = self.get_last_transaction_at_or_before(date)
         return transaction.balance_after
 
-    def get_transactions_between(self, start_date, end_date, category):
+    def get_transactions_between(self, start_date, end_date):
         """Returns the list of transactions of given category that falls after given start_date (inclusive) and before
         given end_date (exclusive)"""
+        matched_transactions = [t for t in self.transactions if start_date <= t.date < end_date]
+        return matched_transactions
+
+    def get_transactions_for_category_between(self, start_date, end_date, category):
+        """Returns the list of transactions of given category that falls after given start_date (inclusive) and before
+        given end_date (exclusive), that match given category."""
         matched_transactions = [t for t in self.transactions if
                                 start_date <= t.date < end_date and (
-                                            t.category == category or (t.category and t.category.is_child_of(category)))]
+                                        t.category == category or (t.category and t.category.is_child_of(category)))]
         return matched_transactions
 
     def add_transaction(self, transaction):
-        # TODO: The following check is *very* expensive in terms of processing-time.
-        #       Consider checking for duplicates less often (e.g. only after importing a complete set of transactions)
-        # if transaction in self.transactions:
-        #     raise ValueError("Duplicate transaction booked")
-        # else:
-        #     self.transactions.append(transaction)
+        """Adds given transaction to this account. Note that the caller is responsible that transactions are only
+        added once to an account."""
         self.transactions.append(transaction)
-        # transaction_processed_event = TransactionEvent(self.name, transaction)
-        # TODO: Publish event
 
     def get_first_transaction_date(self):
         logger.debug("Getting first transaction date for account %s", self)
