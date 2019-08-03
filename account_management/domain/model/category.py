@@ -18,6 +18,19 @@ class Category(Entity):
             r = ""
         return r + self.name
 
+    def is_child_of(self, item):
+        """Returns True if given item is either the same as this category, or if the given item is a parent of this
+        category. Returns False otherwise."""
+        if item:
+            if item.name == self.name and item.parent == self.parent:
+                return True
+            elif self.parent:
+                return self.parent.is_child_of(item)
+            else:
+                return False
+        else:
+            return False
+
 
 class CategoryRepository:
     """Abstract class. Override with specific infrastructure."""

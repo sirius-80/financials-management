@@ -4,8 +4,10 @@ import pubsub.pub
 
 import application.services.data_import
 import infrastructure.repositories
+import infrastructure.repositories.account_repository
 import infrastructure.services
-from application.services.transaction_mapping import CategoryCleanupTransactionMapper, map_transaction
+from application.services.transaction_mapping import CategoryCleanupTransactionMapper, map_transaction, \
+    InternalTransactionsMapper
 
 RABOBANK_TWENTE_OOST = "Rabobank Twente Oost"
 logger = logging.getLogger(__name__)
@@ -131,15 +133,18 @@ def on_transaction_created_event(event):
                                                                             infrastructure.repositories.category_repository.get_category_repository())
     cleanup_transaction_mapper = CategoryCleanupTransactionMapper(
         infrastructure.repositories.category_repository.get_category_repository())
+    internal_transactions_mapper = InternalTransactionsMapper()
     map_transaction(event.transaction, pattern_transaction_mapper,
                     infrastructure.repositories.account_repository.get_account_repository())
     map_transaction(event.transaction, cleanup_transaction_mapper,
                     infrastructure.repositories.account_repository.get_account_repository())
+    map_transaction(event.transaction, internal_transactions_mapper)
 
 
 def initialize_database_when_empty(filename_list, account_repository):
     if not account_repository.get_accounts():
-        import_transactions(account_repository, factory, filename_list)
+        import_transactions(account_repository, infrastructure.repositories.account_repository.get_account_factory(),
+                            filename_list)
         infrastructure.repositories.get_database().connection.commit()
 
 

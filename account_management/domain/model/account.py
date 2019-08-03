@@ -2,7 +2,7 @@ import copy
 import decimal
 import logging
 
-from account_management.domain.model import Entity
+from account_management.domain.model import Entity, DomainEvent
 
 logger = logging.getLogger(__name__)
 
@@ -37,9 +37,26 @@ class Account(Entity):
             bank=self.bank
         )
 
+    def get_combined_amount_for_category_in_month(self, category, date):
+        """Returns the combined amount of transactions in the year and month specified by given date."""
+        matched_transactions = [t for t in self.transactions if
+                                t.date.month == date.month
+                                and t.date.year == date.year
+                                and (t.category == category or (t.category and t.category.is_child_of(category)))]
+        return sum([t.amount for t in matched_transactions])
+
     def get_balance_at(self, date):
+        """Returns the account balance at given date."""
         transaction = self.get_last_transaction_at_or_before(date)
         return transaction.balance_after
+
+    def get_transactions_between(self, start_date, end_date, category):
+        """Returns the list of transactions of given category that falls after given start_date (inclusive) and before
+        given end_date (exclusive)"""
+        matched_transactions = [t for t in self.transactions if
+                                start_date <= t.date < end_date and (
+                                            t.category == category or (t.category and t.category.is_child_of(category)))]
+        return matched_transactions
 
     def add_transaction(self, transaction):
         # TODO: The following check is *very* expensive in terms of processing-time.
@@ -52,12 +69,23 @@ class Account(Entity):
         # transaction_processed_event = TransactionEvent(self.name, transaction)
         # TODO: Publish event
 
+    def get_first_transaction_date(self):
+        logger.debug("Getting first transaction date for account %s", self)
+        if self.transactions:
+            transaction = self.transactions[0]
+            for t in self.transactions:
+                if t.date < transaction.date:
+                    transaction = t
+            return transaction.date
+        else:
+            return None
+
     def get_last_transaction_date(self):
         logger.debug("Getting last transaction date for account %s", self)
         if self.transactions:
             transaction = self.transactions[0]
             for t in self.transactions:
-                if transaction.date < t.date:
+                if t.date > transaction.date:
                     transaction = t
             return transaction.date
         else:
@@ -78,38 +106,38 @@ class Account(Entity):
         return copy.copy(self.transactions)
 
 
-class TransactionCategorizedEvent:
+class TransactionCategorizedEvent(DomainEvent):
     def __init__(self, transaction, old_category, new_category):
         self.transaction = transaction
         self.old_category = old_category
         self.new_category = new_category
 
     def __repr__(self):
-        return "TransactionCategoryUpdatedEvent %s: %s => %s" % (self.transaction, self.old_category, self.new_category)
+        return "TransactionCategorizedEvent %s: %s => %s" % (self.transaction, self.old_category, self.new_category)
 
 
-class AccountCreatedEvent:
+class AccountCreatedEvent(DomainEvent):
     def __init__(self, account):
         self.account = account
 
     def __repr__(self):
-        return "AccountCreatedEvent %s" % (self.account, )
+        return "AccountCreatedEvent %s" % (self.account,)
 
 
-class BankCreatedEvent:
+class BankCreatedEvent(DomainEvent):
     def __init__(self, bank):
         self.bank = bank
 
     def __repr__(self):
-        return "BankCreatedEvent %s" % (self.bank, )
+        return "BankCreatedEvent %s" % (self.bank,)
 
 
-class TransactionCreatedEvent:
+class TransactionCreatedEvent(DomainEvent):
     def __init__(self, transaction):
         self.transaction = transaction
 
     def __repr__(self):
-        return "TransactionCreatedEvent %s" % (self.transaction, )
+        return "TransactionCreatedEvent %s" % (self.transaction,)
 
 
 class Transaction(Entity):

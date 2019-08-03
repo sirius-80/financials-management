@@ -183,7 +183,6 @@ class _AccountRepository(AccountRepository):
         return account
 
     def _create_tables(self):
-        """TODO: Migrate amount/balance to INTEGER"""
         sql_create_banks_table = """CREATE TABLE IF NOT EXISTS banks (
                                     id text PRIMARY KEY,
                                     version integer NOT NULL,

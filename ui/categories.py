@@ -1,0 +1,160 @@
+import pprint
+import logging
+
+import dateutil
+from bokeh.events import Tap
+from bokeh.layouts import column
+from bokeh.models import ColumnDataSource, HoverTool, TapTool, TableColumn, DateFormatter, NumberFormatter, \
+    SelectEditor, DataTable, Select, WidgetBox
+from bokeh.plotting import figure
+
+import application.services
+import infrastructure.repositories.category_repository
+import infrastructure.repositories.account_repository
+
+logger = logging.getLogger(__name__)
+
+
+def get_category_plot(category=None):
+    date_list = application.services.get_transaction_date_range()
+    category_repository = infrastructure.repositories.category_repository.get_category_repository()
+    account_repository = infrastructure.repositories.account_repository.get_account_repository()
+    amounts = [application.services.get_combined_amount_for_category_in_month(category, month) for month in date_list]
+    settings = {'category': category,
+                'granularity': "Month",
+                'transactions': []}
+
+    amounts_source = ColumnDataSource(data={'date': date_list, 'amount': amounts})
+    hover = HoverTool(
+        tooltips=[
+            ('Date', '@date{%F}'),
+            ('Amount', '@amount{(0,0.00}')
+        ],
+        formatters={
+            'date': 'datetime'
+        },
+        mode='vline'
+    )
+    fig = figure(plot_width=1900, plot_height=300, x_axis_type="datetime",
+                 tools=[hover, "tap", "box_zoom", "wheel_zoom", "reset", "pan"])
+    plot = fig.vbar('date', top='amount', width=24 * 24 * 60 * 60 * 1000, source=amounts_source)
+    fig.select(type=TapTool)
+
+    columns = [
+        TableColumn(field="date", title="Date", formatter=DateFormatter()),
+        TableColumn(field="account", title="Account"),
+        TableColumn(field="amount", title="Amount", formatter=NumberFormatter(format='€ 0,0.00', text_align='right')),
+        TableColumn(field="name", title="Name"),
+        TableColumn(field="category", title="Category",
+                    editor=SelectEditor(options=["None"] + [str(c) for c in category_repository.get_all_categories()])),
+        TableColumn(field="descr", title="Description"),
+        TableColumn(field="counter_account", title="Counter account")
+    ]
+    transaction_data = dict(
+        date=[],
+        account=[],
+        amount=[],
+        category=[],
+        name=[],
+        descr=[],
+        counter_account=[]
+    )
+    transaction_source = ColumnDataSource(transaction_data)
+    transactions_table = DataTable(source=transaction_source, columns=columns, width=1900, editable=True)
+
+    def on_update_category(attr, old, new):
+        logger.debug("on_update_category %s::%s => %s", attr, old, new)
+        table_categories = new['category']
+        if table_categories:
+            logger.info("Update!")
+            for transaction, category_qualified_name in zip(settings['transactions'], table_categories):
+                if str(transaction.category) != category_qualified_name:
+                    new_category = category_repository.get_category_by_qualified_name(category_qualified_name)
+                    logger.info("Updating transaction category %s => %s", transaction, new_category)
+                    transaction.update_category(new_category)
+                    account_repository.update_transaction(transaction)
+                    infrastructure.repositories.get_database().connection.commit()
+
+    transactions_table.source.on_change('data', on_update_category)
+
+    def on_selection_event(event):
+        if amounts_source.selected.indices:
+            update_transaction_table()
+        else:
+            clear_transaction_table()
+
+    def clear_transaction_table():
+        data = dict(
+            date=[],
+            account=[],
+            amount=[],
+            category=[],
+            name=[],
+            descr=[],
+            counter_account=[]
+        )
+        settings['transactions'] = []
+        transaction_source.data = data
+
+    def update_transaction_table():
+        index = amounts_source.selected.indices[0]
+        start_date = amounts_source.data['date'][index]
+        logger.debug("Selecting category '%s' and date %s", settings['category'], start_date)
+        if settings['granularity'] == "Year":
+            end_date = start_date + dateutil.relativedelta.relativedelta(years=1)
+        else:
+            end_date = start_date + dateutil.relativedelta.relativedelta(months=1)
+        logger.debug("Selecting transactions between %s and %s", start_date, end_date)
+        selected_transactions = application.services.get_transactions_between(start_date, end_date,
+                                                                              category=category_repository.get_category_by_qualified_name(
+                                                                                  settings['category']))
+        settings['transactions'] = selected_transactions
+        pprint.pprint(selected_transactions)
+        data = dict()
+        data['date'] = [t.date for t in selected_transactions]
+        data['account'] = [t.account.name for t in selected_transactions]
+        data['amount'] = [float(t.amount) for t in selected_transactions]
+        data['name'] = [t.name for t in selected_transactions]
+        data['category'] = [str(t.category) for t in selected_transactions]
+        data['descr'] = [t.description for t in selected_transactions]
+        data['counter_account'] = [t.counter_account for t in selected_transactions]
+        transaction_source.data = data
+
+    fig.on_event(Tap, on_selection_event)
+
+    def update_plot():
+        data = dict()
+        data['date'] = application.services.get_transaction_date_range(day_nr=1)
+        data['amount'] = [application.services.get_combined_amount_for_category_in_month(
+            category_repository.get_category_by_qualified_name(settings['category']), month) for month in date_list]
+        if settings['granularity'] == "Year":
+            amounts_by_year = []
+            for i in range(len(data['amount'])):
+                if i % 12 == 0:
+                    amounts_by_year.append(0)
+                amounts_by_year[i // 12] += data['amount'][i]
+            data['date'] = data['date'][0::12]
+            data['amount'] = amounts_by_year
+            plot.glyph.width = 300 * 24 * 60 * 60 * 1000
+        else:
+            plot.glyph.width = 24 * 24 * 60 * 60 * 1000
+        amounts_source.data = data
+
+    def update_category(attrname, old, new):
+        logger.debug("Callback %s: %s -> %s", attrname, str(old), str(new))
+        settings['category'] = new
+        update_plot()
+
+    def update_date_range(attrname, old, new):
+        logger.debug("Callback %s: %s -> %s", attrname, str(old), str(new))
+        settings['granularity'] = new
+        update_plot()
+
+    category_selector = Select(title="Category", options=["None"] + [str(c) for c in
+                                                                     category_repository.get_all_categories()])
+    category_selector.on_change('value', update_category)
+    date_range_selector = Select(title="Granularity", options=["Month", "Year"])
+    date_range_selector.on_change('value', update_date_range)
+    inputs = WidgetBox(category_selector, date_range_selector)
+
+    return column(fig, inputs, transactions_table)

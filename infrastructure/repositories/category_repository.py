@@ -19,7 +19,7 @@ class _CategoryCache:
 
     def get_categories(self):
         # logger.debug("Getting categories from cache: %s (size=%d)", self.categories, len(self.categories))
-        return self.accounts.values()
+        return self.categories.values()
 
     def get_category_by_qualified_name(self, qname):
         # logger.debug("Getting category with qualified name %s from cache (%s)", qname, self.categories)
