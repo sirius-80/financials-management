@@ -21,15 +21,15 @@ def get_balances(date_list):
 
 
 def plot_data_with_bokeh():
-    range_manager = RangeManager()
-    balance_plot = get_balance_plot(range_manager)
-    profit_loss_plot = get_profit_loss_plot(range_manager)
-    amount_per_category_plot = get_category_plot(range_manager)
+    figure_manager = FigureManager()
+    balance_plot = get_balance_plot(figure_manager)
+    profit_loss_plot = get_profit_loss_plot(figure_manager)
+    amount_per_category_plot = get_category_plot(figure_manager)
 
     curdoc().add_root(column(balance_plot, profit_loss_plot, amount_per_category_plot))
 
 
-class RangeManager:
+class FigureManager:
     class TimeUnit(Enum):
         MONTH = 1
         YEAR = 2
@@ -38,6 +38,15 @@ class RangeManager:
         self.x_range = None
         self.figures = []
         self.granularity = self.TimeUnit.MONTH
+        self.granularity_callbacks = []
+
+    def set_granularity(self, granularity):
+        self.granularity = granularity
+        for cb in self.granularity_callbacks:
+            try:
+                cb(granularity)
+            except:
+                pass
 
     def update_x_range(self, x_range):
         self.x_range = x_range
@@ -50,3 +59,6 @@ class RangeManager:
         logger.debug("Registering figure: %s", figure)
         self.update_x_range(figure.x_range)
         self.figures.append(figure)
+
+    def register_granularity_callback(self, cb):
+        self.granularity_callbacks.append(cb)

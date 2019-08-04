@@ -11,18 +11,19 @@ from bokeh.plotting import figure
 import application.services
 import infrastructure.repositories.category_repository
 import infrastructure.repositories.account_repository
+import ui
 
 logger = logging.getLogger(__name__)
 
 
-def get_category_plot(range_manager):
+def get_category_plot(figure_manager):
     date_list = application.services.get_transaction_date_range()
     category_repository = infrastructure.repositories.category_repository.get_category_repository()
     account_repository = infrastructure.repositories.account_repository.get_account_repository()
     category = None
     amounts = [application.services.get_combined_amount_for_category_in_month(category, month) for month in date_list]
     settings = {'category': category,
-                'granularity': "Month",
+                'granularity': ui.FigureManager.TimeUnit.MONTH,
                 'transactions': []}
 
     amounts_source = ColumnDataSource(data={'date': date_list, 'amount': amounts})
@@ -44,7 +45,8 @@ def get_category_plot(range_manager):
     columns = [
         TableColumn(field="date", title="Date", formatter=DateFormatter(), width=100),
         TableColumn(field="account", title="Account", width=150),
-        TableColumn(field="amount", title="Amount", formatter=NumberFormatter(format='€ 0,0.00', text_align='right'), width=100),
+        TableColumn(field="amount", title="Amount", formatter=NumberFormatter(format='€ 0,0.00', text_align='right'),
+                    width=100),
         TableColumn(field="name", title="Name"),
         TableColumn(field="category", title="Category",
                     editor=SelectEditor(options=["None"] + [str(c) for c in category_repository.get_all_categories()])),
@@ -101,7 +103,7 @@ def get_category_plot(range_manager):
         index = amounts_source.selected.indices[0]
         start_date = amounts_source.data['date'][index]
         logger.debug("Selecting category '%s' and date %s", settings['category'], start_date)
-        if settings['granularity'] == "Year":
+        if settings['granularity'] == ui.FigureManager.TimeUnit.YEAR:
             end_date = start_date + dateutil.relativedelta.relativedelta(years=1)
         else:
             end_date = start_date + dateutil.relativedelta.relativedelta(months=1)
@@ -128,7 +130,7 @@ def get_category_plot(range_manager):
         data['date'] = application.services.get_transaction_date_range(day_nr=1)
         data['amount'] = [application.services.get_combined_amount_for_category_in_month(
             category_repository.get_category_by_qualified_name(settings['category']), month) for month in date_list]
-        if settings['granularity'] == "Year":
+        if settings['granularity'] == ui.FigureManager.TimeUnit.YEAR:
             amounts_by_year = []
             for i in range(len(data['amount'])):
                 if i % 12 == 0:
@@ -148,7 +150,12 @@ def get_category_plot(range_manager):
 
     def update_date_range(attrname, old, new):
         logger.debug("Callback %s: %s -> %s", attrname, str(old), str(new))
-        settings['granularity'] = new
+        if new == "Month":
+            settings['granularity'] = ui.FigureManager.TimeUnit.MONTH
+        else:
+            settings['granularity'] = ui.FigureManager.TimeUnit.YEAR
+
+        figure_manager.set_granularity(settings['granularity'])
         update_plot()
 
     category_selector = Select(title="Category", options=["None"] + [str(c) for c in
@@ -159,9 +166,9 @@ def get_category_plot(range_manager):
     inputs = WidgetBox(category_selector, date_range_selector)
 
     def on_pan(event):
-        range_manager.update_x_range(fig.x_range)
+        figure_manager.update_x_range(fig.x_range)
 
     fig.on_event(PanEnd, on_pan)
-    range_manager.register_figure(fig)
+    figure_manager.register_figure(fig)
 
     return column(fig, inputs, transactions_table)
