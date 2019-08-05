@@ -3,8 +3,8 @@ import logging
 import pubsub.pub
 
 import application.services.data_import
-import infrastructure.repositories
 import infrastructure.repositories.account_repository
+import infrastructure.repositories.category_repository
 import infrastructure.services
 from application.services.transaction_mapping import CategoryCleanupTransactionMapper, map_transaction, \
     InternalTransactionsMapper
@@ -120,6 +120,7 @@ def generate_categories(category_factory):
     category_factory.create_category_from_qualified_name("Uitgaven::Niet gecategoriseerd::Nog in te delen")
 
     category_factory.create_category_from_qualified_name("Overboekingen")
+    infrastructure.repositories.get_database().connection.commit()
 
 
 def transaction_categorized_event_listener(event):
@@ -138,7 +139,8 @@ def on_transaction_created_event(event):
                     infrastructure.repositories.account_repository.get_account_repository())
     map_transaction(event.transaction, cleanup_transaction_mapper,
                     infrastructure.repositories.account_repository.get_account_repository())
-    map_transaction(event.transaction, internal_transactions_mapper)
+    map_transaction(event.transaction, internal_transactions_mapper,
+                    infrastructure.repositories.account_repository.get_account_repository())
 
 
 def initialize_database_when_empty(filename_list, account_repository):

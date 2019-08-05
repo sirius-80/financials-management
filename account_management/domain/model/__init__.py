@@ -20,7 +20,7 @@ class Entity:
         return events
 
     def __eq__(self, other):
-        return other and isinstance(other, self.__class__) and self.id == other.id
+        return isinstance(other, self.__class__) and self.id == other.id
 
     def __hash__(self):
         return hash(self.id)

@@ -9,25 +9,22 @@ class Category(Entity):
 
     @property
     def qualified_name(self):
-        return repr(self)
-
-    def __repr__(self):
         if self.parent:
             r = repr(self.parent) + "::"
         else:
             r = ""
         return r + self.name
 
-    def is_child_of(self, item):
-        """Returns True if given item is either the same as this category, or if the given item is a parent of this
-        category. Returns False otherwise."""
-        if item:
-            if item.name == self.name and item.parent == self.parent:
+    def __repr__(self):
+        return self.qualified_name
+
+    def inherits_from(self, other_category):
+        """Returns True if given ancestor is an ancestor of this category. Returns False otherwise."""
+        if self.parent:
+            if self.parent == other_category:
                 return True
-            elif self.parent:
-                return self.parent.is_child_of(item)
             else:
-                return False
+                return self.parent.inherits_from(other_category)
         else:
             return False
 

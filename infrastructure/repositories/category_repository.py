@@ -44,7 +44,9 @@ class _CategoryCache:
                 parent = read_category_by_id(row["parent"])
             else:
                 parent = None
-            return Category(row["id"], row["version"], row["name"], parent)
+            category = Category(row["id"], row["version"], row["name"], parent)
+            self.update_category(category)
+            return category
 
         category_rows = self.db.query(sql)
         for row in category_rows:
@@ -128,7 +130,7 @@ class _CategoryFactory(CategoryFactory):
         _temp_category = Category(uuid.uuid4().hex, 0, name, parent)
         category = self._cache.get_category_by_qualified_name(_temp_category.qualified_name)
         if not category:
-            category = Category(uuid.uuid4().hex, 0, name, parent)
+            category = _temp_category
             cursor = self._db.connection.cursor()
             if parent:
                 cursor.execute("INSERT INTO categories (id, version, name, parent) VALUES (?, ?, ?, ?)",
@@ -136,13 +138,17 @@ class _CategoryFactory(CategoryFactory):
             else:
                 cursor.execute("INSERT INTO categories (id, version, name) VALUES (?, ?, ?)",
                                (category.id, category.version, category.name))
+            self._cache.update_category(category)
         return category
 
     def create_category_from_qualified_name(self, qualified_name):
-        next_parent = None
-        for name in qualified_name.split("::"):
-            category = self.create_category(name, next_parent)
-            next_parent = category
+        if self._cache:
+            category = self._cache.get_category_by_qualified_name(qualified_name)
+        if not category:
+            next_parent = None
+            for name in qualified_name.split("::"):
+                category = self.create_category(name, next_parent)
+                next_parent = category
         return category
 
 

@@ -42,7 +42,7 @@ class Account(Entity):
         matched_transactions = [t for t in self.transactions if
                                 t.date.month == date.month
                                 and t.date.year == date.year
-                                and (t.category == category or (t.category and t.category.is_child_of(category)))]
+                                and (t.category == category or (t.category and t.category.inherits_from(category)))]
         return sum([t.amount for t in matched_transactions])
 
     def get_balance_at(self, date):
@@ -61,7 +61,7 @@ class Account(Entity):
         given end_date (exclusive), that match given category."""
         matched_transactions = [t for t in self.transactions if
                                 start_date <= t.date < end_date and (
-                                        t.category == category or (t.category and t.category.is_child_of(category)))]
+                                        t.category == category or (t.category and t.category.inherits_from(category)))]
         return matched_transactions
 
     def add_transaction(self, transaction):

@@ -48,7 +48,7 @@ class InternalTransactionsMapper(TransactionCategoryMapper):
 
     def get_category_scores(self, transaction):
         category_scores = []
-        for account in self.account_repository:
+        for account in self.account_repository.get_accounts():
             if account.name == transaction.counter_account:
                 TransactionCategoryMapper.CategoryScore(self.internal_transactions_category, self.DEFAULT_SCORE)
         return category_scores
@@ -81,5 +81,5 @@ def map_transaction(transaction, transaction_mapper, account_repository, update=
     category = get_best_scoring_category(category_scores)
     if category:
         if (update or not transaction.category) and transaction.category != category:
-            transaction.update_category(get_best_scoring_category(category_scores))
+            transaction.update_category(category)
             account_repository.update_transaction(transaction)
