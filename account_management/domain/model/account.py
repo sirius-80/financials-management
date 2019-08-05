@@ -47,7 +47,7 @@ class Account(Entity):
 
     def get_balance_at(self, date):
         """Returns the account balance at given date."""
-        transaction = self.get_last_transaction_at_or_before(date)
+        transaction = self._get_last_transaction_at_or_before(date)
         return transaction.balance_after
 
     def get_transactions_between(self, start_date, end_date):
@@ -91,7 +91,9 @@ class Account(Entity):
         else:
             return None
 
-    def get_last_transaction_at_or_before(self, date):
+    def _get_last_transaction_at_or_before(self, date):
+        """Returns the last transaction at given date, or the last transaction that occurred before this date, if
+        no transaction occurred on this specific date."""
         logger.debug("Getting last transaction before %s for account %s", date, self)
         if self.transactions:
             transaction = self.transactions[0]

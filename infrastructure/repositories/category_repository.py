@@ -90,7 +90,7 @@ class _CategoryRepository(CategoryRepository):
                 parent = None
             return Category(row["id"], row["version"], row["name"], parent)
 
-    def get_all_categories(self):
+    def get_categories(self):
         if self._cache:
             return self._cache.get_categories()
         else:

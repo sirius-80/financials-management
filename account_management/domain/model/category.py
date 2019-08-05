@@ -19,7 +19,7 @@ class Category(Entity):
         return self.qualified_name
 
     def inherits_from(self, other_category):
-        """Returns True if given ancestor is an ancestor of this category. Returns False otherwise."""
+        """Returns True if given other_category is an ancestor of this category. Returns False otherwise."""
         if self.parent:
             if self.parent == other_category:
                 return True
@@ -35,7 +35,7 @@ class CategoryRepository:
     def get_category_by_qualified_name(self, qualified_name):
         raise NotImplementedError
 
-    def get_all_categories(self):
+    def get_categories(self):
         raise NotImplementedError
 
 

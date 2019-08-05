@@ -49,7 +49,7 @@ def get_category_plot(figure_manager):
                     width=100),
         TableColumn(field="name", title="Name"),
         TableColumn(field="category", title="Category",
-                    editor=SelectEditor(options=["None"] + [str(c) for c in category_repository.get_all_categories()])),
+                    editor=SelectEditor(options=["None"] + [str(c) for c in category_repository.get_categories()])),
         TableColumn(field="description", title="Description", width=800),
         TableColumn(field="counter_account", title="Counter account", width=200)
     ]
@@ -159,7 +159,7 @@ def get_category_plot(figure_manager):
         update_plot()
 
     category_selector = Select(title="Category", options=["None"] + [str(c) for c in
-                                                                     category_repository.get_all_categories()])
+                                                                     category_repository.get_categories()])
     category_selector.on_change('value', update_category)
     date_range_selector = Select(title="Granularity", options=["Month", "Year"])
     date_range_selector.on_change('value', update_date_range)

@@ -161,7 +161,7 @@ def log_current_account_info(account_repository):
     for account in account_repository.get_accounts():
         last_date = account.get_last_transaction_date()
         logger.warning("Account: %s (%s): %s => € %8s", account.name, account.id, last_date,
-                       account.get_last_transaction_at_or_before(last_date).balance_after)
+                       account.get_balance_at(last_date))
 
 
 def initialize_application():
