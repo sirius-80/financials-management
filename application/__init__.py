@@ -11,17 +11,13 @@ import infrastructure.services.afas
 from application.services.transaction_mapping import CategoryCleanupTransactionMapper, map_transaction, \
     InternalTransactionsMapper
 
-RABOBANK_TWENTE_OOST = "Rabobank Twente Oost"
+RABOBANK = "Rabobank"
 logger = logging.getLogger(__name__)
 
 
-def import_transactions(account_repository, account_factory, filename_list):
-    bank = account_repository.get_bank_by_name(RABOBANK_TWENTE_OOST)
-    if not bank:
-        bank = account_factory.create_bank(RABOBANK_TWENTE_OOST)
-
+def import_transactions(filename_list):
     for csv in filename_list:
-        application.services.data_import.import_transactions_from_rabobank_csv(csv, bank)
+        application.services.data_import.import_transactions_from_rabobank_csv(csv, RABOBANK)
 
 
 def generate_categories(category_factory):
@@ -151,8 +147,7 @@ def on_transaction_created_event(event):
 
 def initialize_database_when_empty(filename_list, account_repository):
     if not account_repository.get_accounts():
-        import_transactions(account_repository, infrastructure.repositories.account_repository.get_account_factory(),
-                            filename_list)
+        import_transactions(filename_list)
         infrastructure.repositories.get_database().connection.commit()
 
 

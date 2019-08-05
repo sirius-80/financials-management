@@ -7,20 +7,6 @@ from account_management.domain.model import Entity, DomainEvent
 logger = logging.getLogger(__name__)
 
 
-class Bank(Entity):
-    def __init__(self, bank_id, bank_version, name):
-        super().__init__(bank_id, bank_version)
-        self.name = name
-
-    def __repr__(self):
-        return "{c}(id={id}, version={version!r}, name={name}".format(
-            c=self.__class__.__name__,
-            id=self.id,
-            version=self.version,
-            name=self.name
-        )
-
-
 class Account(Entity):
     def __init__(self, account_id, account_version, name, bank):
         super().__init__(account_id, account_version)
@@ -126,14 +112,6 @@ class AccountCreatedEvent(DomainEvent):
         return "AccountCreatedEvent %s" % (self.account,)
 
 
-class BankCreatedEvent(DomainEvent):
-    def __init__(self, bank):
-        self.bank = bank
-
-    def __repr__(self):
-        return "BankCreatedEvent %s" % (self.bank,)
-
-
 class TransactionCreatedEvent(DomainEvent):
     def __init__(self, transaction):
         self.transaction = transaction
@@ -204,13 +182,10 @@ class AccountRepository:
     def get_account_by_id(self, id):
         raise NotImplementedError
 
-    def get_bank_by_id(self, id):
-        raise NotImplementedError
-
-    def get_bank_by_name(self, name):
-        raise NotImplementedError
-
     def get_account_by_name(self, name):
+        raise NotImplementedError
+
+    def update_account(self, account):
         raise NotImplementedError
 
 
@@ -220,7 +195,4 @@ class AccountFactory:
 
     def create_transaction(self, account, date, amount, name, description, serial, counter_account, balance_after,
                            reference):
-        raise NotImplementedError
-
-    def create_bank(self, name):
         raise NotImplementedError

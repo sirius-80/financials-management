@@ -2,8 +2,8 @@ import decimal
 import logging
 import uuid
 
-from account_management.domain.model.account import AccountRepository, Account, Bank, Transaction, AccountFactory, \
-    AccountCreatedEvent, BankCreatedEvent, TransactionCreatedEvent
+from account_management.domain.model.account import AccountRepository, Account, Transaction, AccountFactory, \
+    AccountCreatedEvent, TransactionCreatedEvent
 from infrastructure import publish_domain_events
 from infrastructure.repositories import get_database, category_repository
 
@@ -14,7 +14,6 @@ class _AccountCache:
     def __init__(self, db):
         self.db = db
         self.accounts = {}
-        self.banks = {}
 
     def update_account(self, account):
         if account.id not in self.accounts.keys():
@@ -22,13 +21,6 @@ class _AccountCache:
         stored = account
         stored.__dict__ = account.__dict__
         # logger.debug("Updated account: %s (cached = %s)", stored, self.accounts)
-        return stored
-
-    def update_bank(self, bank):
-        if bank.id not in self.banks.keys():
-            self.banks[bank.id] = bank
-        stored = self.get_bank_by_id(bank.id)
-        stored.__dict__ = bank.__dict__
         return stored
 
     def update_transaction(self, transaction):
@@ -52,22 +44,12 @@ class _AccountCache:
         else:
             return None
 
-    def get_bank_by_id(self, id):
-        if id in self.banks.keys():
-            return self.banks[id]
-        else:
-            return None
-
     def init_cache(self):
         logger.info("Initializing cache...")
         sql = """SELECT * FROM accounts"""
         account_rows = self.db.query(sql)
         for row in account_rows:
-            bank_id = row["bank"]
-            bank_row = self.db.query_one("SELECT * FROM banks WHERE id = ? ", (bank_id,))
-            bank = self.get_bank_by_id(bank_id) or Bank(bank_row["id"], bank_row["version"], bank_row["name"])
-
-            account = Account(row["id"], row["version"], row["name"], bank)
+            account = Account(row["id"], row["version"], row["name"], row["bank"])
 
             logger.debug("Fetching transactions for account %s", account)
             for trow in self.db.query("SELECT * FROM transactions WHERE account = ?", (account.id,)):
@@ -131,21 +113,9 @@ class _AccountRepository(AccountRepository):
             account_rows = self.db.query(sql)
             accounts = []
             for row in account_rows:
-                bank = self.get_bank_by_id(row["bank"])
-                account = Account(row["id"], row["version"], row["name"], bank)
+                account = Account(row["id"], row["version"], row["name"], row["bank"])
                 accounts.append(self._collect_transactions(account))
             return accounts
-
-    def get_bank_by_id(self, id):
-        row = self.db.query_one("SELECT * FROM banks WHERE id=?", (id,))
-        return Bank(row["id"], row["version"], row["name"])
-
-    def get_bank_by_name(self, name):
-        row = self.db.query_one("SELECT * FROM banks WHERE name=?", (name,))
-        if row:
-            return Bank(row["id"], row["version"], row["name"])
-        else:
-            return None
 
     def get_account_by_id(self, id):
         if self._cache:
@@ -153,10 +123,7 @@ class _AccountRepository(AccountRepository):
         else:
             row = self.db.query_one("SELECT * FROM accounts WHERE id=?", (id,))
             if row:
-                account_id = row["id"]
-                bank_id = row["bank"]
-                bank = self.get_bank_by_id(bank_id)
-                account = Account(account_id, row["version"], row["name"], bank)
+                account = Account(row["id"], row["version"], row["name"], row["bank"])
                 return self._collect_transactions(account)
             else:
                 return None
@@ -167,8 +134,7 @@ class _AccountRepository(AccountRepository):
         else:
             row = self.db.query_one("SELECT * FROM accounts WHERE name=?", (name,))
             if row:
-                bank = self.get_bank_by_id(row["bank"])
-                account = Account(row["id"], row["version"], row["name"], bank)
+                account = Account(row["id"], row["version"], row["name"], row["bank"])
                 return self._collect_transactions(account)
             else:
                 return None
@@ -183,17 +149,11 @@ class _AccountRepository(AccountRepository):
         return account
 
     def _create_tables(self):
-        sql_create_banks_table = """CREATE TABLE IF NOT EXISTS banks (
-                                    id text PRIMARY KEY,
-                                    version integer NOT NULL,
-                                    name text NOT NULL
-                                    );"""
         sql_create_accounts_table = """CREATE TABLE IF NOT EXISTS accounts (
                                         id text PRIMARY KEY,
                                         version integer NOT NULL,
                                         name text NOT NULL,
-                                        bank integer NOT NULL,
-                                        FOREIGN KEY (bank) REFERENCES banks (id)
+                                        bank text NOT NULL
                                         );"""
         sql_create_transactions_table = """CREATE TABLE IF NOT EXISTS transactions (
                                             id text PRIMARY KEY,
@@ -212,7 +172,6 @@ class _AccountRepository(AccountRepository):
                                             FOREIGN KEY (category) REFERENCES categories (id)
                                             );"""
         cursor = self.db.connection.cursor()
-        cursor.execute(sql_create_banks_table)
         cursor.execute(sql_create_accounts_table)
         cursor.execute(sql_create_transactions_table)
 
@@ -229,25 +188,12 @@ class _AccountFactory(AccountFactory):
         account.register_domain_event(AccountCreatedEvent(account))
         cursor = self.db.connection.cursor()
         cursor.execute("INSERT INTO accounts (id, version, name, bank) VALUES (?,?,?,?)",
-                       (account.id, account.version, account.name, account.bank.id))
+                       (account.id, account.version, account.name, account.bank))
         if self._cache:
             self._cache.update_account(account)
 
         publish_domain_events(account.flush_domain_events())
         return account
-
-    def create_bank(self, name):
-        logger.debug("Creating bank: %s", name)
-        bank = Bank(uuid.uuid4().hex, 0, name)
-        bank.register_domain_event(BankCreatedEvent(bank))
-        cursor = self.db.connection.cursor()
-        logger.debug("Creating bank: %s", bank)
-        cursor.execute("INSERT INTO banks (id, version, name) VALUES (?,?,?)", (bank.id, bank.version, bank.name))
-        if self._cache:
-            self._cache.update_bank(bank)
-
-        publish_domain_events(bank.flush_domain_events())
-        return bank
 
     def create_transaction(self, account, date, amount, name, description, serial, counter_account, balance_after,
                            reference):
