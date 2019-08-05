@@ -14,7 +14,7 @@ def get_balance_plot(figure_manager):
     hover = HoverTool(
         tooltips=[
             ('Date', '@date{%F}'),
-            ('Saldo', '@balance{(0,0.00}')
+            ('Balance', '@balance{(0,0.00}')
         ],
         formatters={
             'date': 'datetime'

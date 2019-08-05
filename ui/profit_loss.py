@@ -3,7 +3,7 @@ import logging
 import dateutil.relativedelta
 from bokeh.events import PanEnd
 from bokeh.layouts import column
-from bokeh.models import ColumnDataSource, HoverTool, Range1d
+from bokeh.models import ColumnDataSource, HoverTool
 from bokeh.plotting import figure
 
 import application.services

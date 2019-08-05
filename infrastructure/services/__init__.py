@@ -9,20 +9,21 @@ class _PatternTransactionCategoryMapper(TransactionCategoryMapper):
         self.category_repository = category_repository
         self.names = {}
         print("Reading mapping from", mapping_filename)
-        with open(mapping_filename, encoding="ISO-8859-1") as csvfile:
-            reader = csv.DictReader(csvfile, delimiter=',')
+        with open(mapping_filename, encoding="ISO-8859-1") as csv_file:
+            reader = csv.DictReader(csv_file, delimiter=',')
             for row in reader:
                 name = row["Name"]
-                descr = row["Description"]
+                description = row["Description"]
                 cat_name = row["Category"]
                 try:
                     category = self.category_repository.get_category_by_qualified_name(cat_name)
                 except:
                     print("Failed to get category for", cat_name)
                     raise
-                self.names[(name, descr)] = category
+                self.names[(name, description)] = category
 
-    def match_value(self, name, description):
+    @staticmethod
+    def match_value(name, description):
         """Returns a numerical value for a match, that can be used to compare the quality of the matches."""
         value = 0
         if name:
@@ -38,7 +39,6 @@ class _PatternTransactionCategoryMapper(TransactionCategoryMapper):
             description_pattern = ".*%s.*" % description.lower()
             if re.match(name_pattern, transaction.name.lower()) and re.match(description_pattern,
                                                                              transaction.description.lower()):
-                # transaction.category = self.names[(name, descr)]
                 category = self.names[(name, description)]
                 score = self.match_value(name, description)
                 category_score = TransactionCategoryMapper.CategoryScore(category, score)

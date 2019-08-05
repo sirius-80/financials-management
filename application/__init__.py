@@ -1,5 +1,6 @@
 import logging
 
+# noinspection PyPackageRequirements
 import pubsub.pub
 
 import application.services.data_import

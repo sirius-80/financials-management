@@ -1,16 +1,16 @@
-import pprint
 import logging
+import pprint
 
 import dateutil
-from bokeh.events import Tap, PanEnd, PanStart
+from bokeh.events import Tap, PanEnd
 from bokeh.layouts import column
 from bokeh.models import ColumnDataSource, HoverTool, TapTool, TableColumn, DateFormatter, NumberFormatter, \
     SelectEditor, DataTable, Select, WidgetBox
 from bokeh.plotting import figure
 
 import application.services
-import infrastructure.repositories.category_repository
 import infrastructure.repositories.account_repository
+import infrastructure.repositories.category_repository
 import ui
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ def get_category_plot(figure_manager):
         TableColumn(field="name", title="Name"),
         TableColumn(field="category", title="Category",
                     editor=SelectEditor(options=["None"] + [str(c) for c in category_repository.get_all_categories()])),
-        TableColumn(field="descr", title="Description", width=800),
+        TableColumn(field="description", title="Description", width=800),
         TableColumn(field="counter_account", title="Counter account", width=200)
     ]
     transaction_data = dict(
@@ -59,7 +59,7 @@ def get_category_plot(figure_manager):
         amount=[],
         category=[],
         name=[],
-        descr=[],
+        description=[],
         counter_account=[]
     )
     transaction_source = ColumnDataSource(transaction_data)
@@ -119,7 +119,7 @@ def get_category_plot(figure_manager):
         data['amount'] = [float(t.amount) for t in selected_transactions]
         data['name'] = [t.name for t in selected_transactions]
         data['category'] = [str(t.category) for t in selected_transactions]
-        data['descr'] = [t.description for t in selected_transactions]
+        data['description'] = [t.description for t in selected_transactions]
         data['counter_account'] = [t.counter_account for t in selected_transactions]
         transaction_source.data = data
 

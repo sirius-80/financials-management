@@ -21,9 +21,9 @@ class _CategoryCache:
         # logger.debug("Getting categories from cache: %s (size=%d)", self.categories, len(self.categories))
         return self.categories.values()
 
-    def get_category_by_qualified_name(self, qname):
-        # logger.debug("Getting category with qualified name %s from cache (%s)", qname, self.categories)
-        cached = next(iter(c for c in self.categories.values() if c.qualified_name == qname), None)
+    def get_category_by_qualified_name(self, qualified_name):
+        # logger.debug("Getting category with qualified name %s from cache (%s)", qualified_name, self.categories)
+        cached = next(iter(c for c in self.categories.values() if c.qualified_name == qualified_name), None)
         # logger.debug("Got from cache: %s", cached)
         return cached
 
@@ -72,6 +72,7 @@ class _CategoryRepository(CategoryRepository):
         else:
             names = qualified_name.split("::")
             next_parent = None
+            category = None
             for name in names:
                 row = self.db.query_one("SELECT * FROM categories WHERE name = ? ", (name,))
                 category = Category(row["id"], row["version"], row["name"], next_parent)
@@ -142,6 +143,7 @@ class _CategoryFactory(CategoryFactory):
         return category
 
     def create_category_from_qualified_name(self, qualified_name):
+        category = None
         if self._cache:
             category = self._cache.get_category_by_qualified_name(qualified_name)
         if not category:

@@ -9,8 +9,8 @@ def parse_csv(filename, category_repo):
     """Parses all csv-files into the list."""
     export = AfasExport()
     print("Reading ", filename)
-    with open(filename, encoding="ISO-8859-1") as csvfile:
-        reader = csv.DictReader(csvfile, delimiter=';')
+    with open(filename, encoding="ISO-8859-1") as csv_file:
+        reader = csv.DictReader(csv_file, delimiter=';')
 
         for row in reader:
             try:
@@ -27,16 +27,16 @@ def parse_csv(filename, category_repo):
                 name = " ".join(row["name"].split())
                 description = " ".join(row["description"].split())
                 cat = row["category"]
-                subcat = row["subcategory"]
+                sub_category = row["subcategory"]
 
                 category = None
                 try:
-                    category = category_repo.get_category_by_qualified_name("Uitgaven::" + cat + "::" + subcat)
+                    category = category_repo.get_category_by_qualified_name("Uitgaven::" + cat + "::" + sub_category)
                 except:
                     try:
-                        category = category_repo.get_category_by_qualified_name(cat + "::" + subcat)
+                        category = category_repo.get_category_by_qualified_name(cat + "::" + sub_category)
                     except:
-                        print("Failed to get category for %s::%s" % (cat, subcat))
+                        print("Failed to get category for %s::%s" % (cat, sub_category))
                         raise
 
                 if category:

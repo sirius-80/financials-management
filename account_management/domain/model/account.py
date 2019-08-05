@@ -179,7 +179,7 @@ class Transaction(Entity):
 
     @balance_after.setter
     def balance_after(self, value):
-        self._balance_after = int(decimal.Decimal(value) * decimal(100))
+        self._balance_after = int(decimal.Decimal(value) * decimal.Decimal(100))
 
     @property
     def amount(self):

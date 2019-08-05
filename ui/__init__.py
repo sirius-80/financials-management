@@ -1,9 +1,8 @@
 import logging
 from enum import Enum
 
-from bokeh.io import curdoc, show
+from bokeh.io import curdoc
 from bokeh.layouts import column
-from bokeh.models import Range1d
 
 import application.services
 from ui.balances import get_balance_plot

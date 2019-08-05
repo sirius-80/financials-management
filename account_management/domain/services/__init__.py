@@ -1,27 +1,3 @@
-# class TransactionService:
-#     def __init__(self, account_repository, account_factory):
-#         self.account_repository = account_repository
-#         self.account_factory = account_factory
-#
-#     def book_transaction(self, account_id, date, amount, description, serial=None, counter_account=None,
-#                          balance_after=None,
-#                          reference=None):
-#         account = self.account_repository.get_account_by_id(account_id)
-#         if not balance_after:
-#             balance_after = account.get_balance_at(date) + amount
-#         if not serial:
-#             last = account.get_last_transaction_at_or_before(date)
-#             if last:
-#                 serial = last.serial + 1
-#             else:
-#                 serial = 1
-#         transaction = self.account_factory.create_transaction(self, date, amount, description, serial,
-#                                                               counter_account, balance_after, reference)
-#         account.add_transaction(transaction)
-#         return transaction
-import csv
-
-
 def find_transactions_by_attributes(account, date, serial, amount, name, counter_account, description):
     matches = []
     for t in account.get_transactions():

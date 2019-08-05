@@ -11,8 +11,8 @@ def import_transactions_from_rabobank_csv(filename, bank):
     """Parses given csv-file export from given bank into the database (resulting in accounts and transactions).
     """
     logger.info("Importing %s", filename)
-    with open(filename, encoding="ISO-8859-1") as csvfile:
-        reader = csv.DictReader(csvfile, delimiter=',')
+    with open(filename, encoding="ISO-8859-1") as csv_file:
+        reader = csv.DictReader(csv_file, delimiter=',')
 
         for row in reader:
             account_id = row["IBAN/BBAN"]
