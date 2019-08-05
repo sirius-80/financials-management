@@ -6,6 +6,7 @@ import application.services.data_import
 import infrastructure.repositories.account_repository
 import infrastructure.repositories.category_repository
 import infrastructure.services
+import infrastructure.services.afas
 from application.services.transaction_mapping import CategoryCleanupTransactionMapper, map_transaction, \
     InternalTransactionsMapper
 
@@ -132,10 +133,14 @@ def on_transaction_created_event(event):
     logger.info("Categorizing new transaction: %s", event.transaction)
     pattern_transaction_mapper = infrastructure.services.get_pattern_mapper("mapping.csv",
                                                                             infrastructure.repositories.category_repository.get_category_repository())
+    afas_transaction_mapper = infrastructure.services.afas.get_afas_mapper("AFAS2.csv",
+                                                                           infrastructure.repositories.category_repository.get_category_repository())
     cleanup_transaction_mapper = CategoryCleanupTransactionMapper(
         infrastructure.repositories.category_repository.get_category_repository())
     internal_transactions_mapper = InternalTransactionsMapper()
     map_transaction(event.transaction, pattern_transaction_mapper,
+                    infrastructure.repositories.account_repository.get_account_repository())
+    map_transaction(event.transaction, afas_transaction_mapper,
                     infrastructure.repositories.account_repository.get_account_repository())
     map_transaction(event.transaction, cleanup_transaction_mapper,
                     infrastructure.repositories.account_repository.get_account_repository())
@@ -166,9 +171,6 @@ def initialize_application():
     pubsub.pub.subscribe(transaction_categorized_event_listener, "TransactionCategorizedEvent")
     pubsub.pub.subscribe(on_transaction_created_event, "TransactionCreatedEvent")
     generate_categories(infrastructure.repositories.category_repository.get_category_factory())
-
-    # afas_transaction_mapper = infrastructure.services.afas.get_afas_mapper("AFAS2.csv",
-    #                                                                        infrastructure.repositories.category_repository.get_category_repository())
 
     # TODO: Control caching from cmd-line parameter?
     infrastructure.repositories.account_repository.enable_cache()
