@@ -2,7 +2,7 @@ from account_management.domain.model import Entity
 
 
 class Category(Entity):
-    def __init__(self, category_id, category_version, name, parent):
+    def __init__(self, category_id, category_version, name, parent=None):
         super().__init__(category_id, category_version)
         self.name = name
         self.parent = parent
