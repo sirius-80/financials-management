@@ -183,13 +183,13 @@ class AccountRepository:
     def get_account_by_name_and_bank(self, name, bank):
         raise NotImplementedError
 
-    def update_account(self, account):
+    def save_account(self, account):
         raise NotImplementedError
 
     def get_transaction_by_id(self, id):
         raise NotImplementedError
 
-    def update_transaction(self, transaction):
+    def save_transaction(self, transaction):
         raise NotImplementedError
 
 

@@ -16,13 +16,13 @@ class _AccountCache(AccountRepository):
         self.accounts = {}
         self.transactions = {}
 
-    def update_account(self, account):
+    def save_account(self, account):
         if account.id not in self.accounts.keys():
             self.accounts[account.id] = account
         assert self.accounts[account.id] is account
         return account
 
-    def update_transaction(self, transaction):
+    def save_transaction(self, transaction):
         if transaction.id not in self.transactions.keys():
             self.transactions[transaction.id] = transaction
         assert self.transactions[transaction.id] is transaction
@@ -59,7 +59,7 @@ class _AccountCache(AccountRepository):
         account_rows = self.db.query(sql)
         for row in account_rows:
             account = Account(row["id"], row["version"], row["name"], row["bank"])
-            self.update_account(account)
+            self.save_account(account)
 
             logger.debug("Fetching transactions for account %s", account)
             for trow in self.db.query("SELECT * FROM transactions WHERE account = ?", (account.id,)):
@@ -67,7 +67,7 @@ class _AccountCache(AccountRepository):
                 transaction = Transaction(trow["id"], trow["version"], account, trow["serial"], trow["date"],
                                           trow["amount"], trow["name"], trow["description"], trow["counter_account"],
                                           trow["balance_after"], trow["reference"], category)
-                self.update_transaction(transaction)
+                self.save_transaction(transaction)
                 account.add_transaction(transaction)
 
         logger.info("Cache initialized...")
@@ -83,7 +83,7 @@ class _AccountRepository(AccountRepository):
         self._cache = cache
         self._create_tables()
 
-    def update_account(self, account):
+    def save_account(self, account):
         cursor = self.db.connection.cursor()
         if self.get_account_by_id(account.id):
             cursor.execute("UPDATE accounts SET version=?, name=?, bank=? WHERE id=?",
@@ -92,10 +92,10 @@ class _AccountRepository(AccountRepository):
             cursor.execute("INSERT INTO accounts (id, version, name, bank) VALUES (?,?,?,?)",
                            (account.id, account.version, account.name, account.bank))
         if self._cache:
-            self._cache.update_account(account)
+            self._cache.save_account(account)
         publish_domain_events(account.flush_domain_events())
 
-    def update_transaction(self, transaction):
+    def save_transaction(self, transaction):
         cursor = self.db.connection.cursor()
         if self.get_transaction_by_id(transaction.id):
             cursor.execute(
@@ -117,7 +117,7 @@ class _AccountRepository(AccountRepository):
                  transaction.counter_account, transaction.reference, transaction.account.id,
                  transaction.category and transaction.category.id or None))
         if self._cache:
-            self._cache.update_transaction(transaction)
+            self._cache.save_transaction(transaction)
 
         publish_domain_events(transaction.flush_domain_events())
         return transaction
@@ -142,7 +142,7 @@ class _AccountRepository(AccountRepository):
             if row:
                 account = Account(row["id"], row["version"], row["name"], row["bank"])
                 if self._cache:
-                    self._cache.update_account(account)
+                    self._cache.save_account(account)
                 return self._collect_transactions(account)
             else:
                 return None
@@ -158,7 +158,7 @@ class _AccountRepository(AccountRepository):
                                           row["amount"], row["name"], row["description"], row["counter_account"],
                                           row["balance_after"], row["reference"], row["category"])
                 if self._cache:
-                    self._cache.update_transaction(transaction)
+                    self._cache.save_transaction(transaction)
                 return transaction
             else:
                 return None

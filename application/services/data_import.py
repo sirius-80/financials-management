@@ -41,7 +41,7 @@ def import_transactions_from_rabobank_csv(filename, bank):
             else:
                 transaction = account_factory.create_transaction(account, date, amount, name, description, serial,
                                                                  counter_account, balance, reference)
-                account_repository.update_transaction(transaction)
+                account_repository.save_transaction(transaction)
                 account.add_transaction(transaction)
 
             # mapping.map_transaction(transaction)
@@ -56,5 +56,5 @@ def _get_or_create_account(account_name, bank):
     account = account_repository.get_account_by_name_and_bank(account_name, bank)
     if not account:
         account = account_factory.create_account(account_name, bank)
-        account_repository.update_account(account)
+        account_repository.save_account(account)
     return account

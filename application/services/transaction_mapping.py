@@ -82,4 +82,4 @@ def map_transaction(transaction, transaction_mapper, account_repository, update=
     if category:
         if (update or not transaction.category) and transaction.category != category:
             transaction.update_category(category)
-            account_repository.update_transaction(transaction)
+            account_repository.save_transaction(transaction)

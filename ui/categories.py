@@ -75,7 +75,7 @@ def get_category_plot(figure_manager):
                     new_category = category_repository.get_category_by_qualified_name(category_qualified_name)
                     logger.info("Updating transaction category %s => %s", transaction, new_category)
                     transaction.update_category(new_category)
-                    account_repository.update_transaction(transaction)
+                    account_repository.save_transaction(transaction)
                     infrastructure.repositories.get_database().connection.commit()
 
     transactions_table.source.on_change('data', on_update_category)

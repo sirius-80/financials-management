@@ -13,7 +13,7 @@ class _CategoryCache(CategoryRepository):
         self.db = db
         self.categories = {}
 
-    def update_category(self, category):
+    def save_category(self, category):
         if category.qualified_name not in self.categories.keys():
             logger.debug("Adding category %s (id=%s) to cache", category, category.id)
             self.categories[category.qualified_name] = category
@@ -50,7 +50,7 @@ class _CategoryCache(CategoryRepository):
                 else:
                     parent = None
                 category = self.get_category(row["id"]) or Category(row["id"], row["version"], row["name"], parent)
-                self.update_category(category)
+                self.save_category(category)
                 return category
             else:
                 return None
@@ -65,7 +65,7 @@ class _CategoryCache(CategoryRepository):
                 else:
                     parent = None
                 category = self.get_category(row["id"]) or Category(row["id"], row["version"], row["name"], parent)
-                self.update_category(category)
+                self.save_category(category)
         except sqlite3.Error as e:
             logger.warning("%s: No data from database: %s", self, e)
         # logger.info("Cache initialized...")
@@ -104,7 +104,7 @@ class _CategoryRepository(CategoryRepository):
                 parent = None
             category = Category(row["id"], row["version"], row["name"], parent)
             if self._cache:
-                self._cache.update_category(category)
+                self._cache.save_category(category)
 
             return category
 
@@ -129,7 +129,7 @@ class _CategoryRepository(CategoryRepository):
                     category.parent = None
             return categories
 
-    def update_category(self, category):
+    def save_category(self, category):
         logger.debug("%s: update_category(%s (id=%s))", self, category, category.id)
         cursor = self.db.connection.cursor()
         if not self.get_category_by_qualified_name(category.qualified_name):
@@ -143,9 +143,9 @@ class _CategoryRepository(CategoryRepository):
                            (category.id, category.version, category.name,
                             category.parent and category.parent.id or None))
         if category.parent and not self.get_category_by_qualified_name(category.parent.qualified_name):
-            self.update_category(category.parent)
+            self.save_category(category.parent)
 
-        self._cache.update_category(category)
+        self._cache.save_category(category)
 
     def _create_tables(self):
         sql_create_categories_table = """CREATE TABLE IF NOT EXISTS categories (

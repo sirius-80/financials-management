@@ -22,7 +22,7 @@ def import_transactions(filename_list):
 
 def generate_category(category_repository, category_factory, qualified_name):
     if not category_repository.get_category_by_qualified_name(qualified_name):
-        category_repository.update_category(category_factory.create_category_from_qualified_name(qualified_name))
+        category_repository.save_category(category_factory.create_category_from_qualified_name(qualified_name))
 
 
 def generate_categories(category_factory, category_repository):
