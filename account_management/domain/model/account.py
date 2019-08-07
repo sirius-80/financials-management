@@ -128,11 +128,11 @@ class Transaction(Entity):
         self.account = account
         self.serial = serial
         self.date = date
-        self._amount = amount
+        self.amount = amount
         self.name = name
         self.description = description
         self.counter_account = counter_account
-        self._balance_after = balance_after
+        self.balance_after = balance_after
         self.reference = reference
         self.category = category
 
@@ -154,22 +154,6 @@ class Transaction(Entity):
         self.register_domain_event(TransactionCategorizedEvent(self, self.category, category))
         self.category = category
         self.version += 1
-
-    @property
-    def balance_after(self):
-        return decimal.Decimal(self._balance_after) / decimal.Decimal(100)
-
-    @balance_after.setter
-    def balance_after(self, value):
-        self._balance_after = int(decimal.Decimal(value) * decimal.Decimal(100))
-
-    @property
-    def amount(self):
-        return decimal.Decimal(self._amount) / decimal.Decimal(100)
-
-    @amount.setter
-    def amount(self, value):
-        self._amount = int(decimal.Decimal(value) * decimal.Decimal(100))
 
 
 class AccountRepository:
@@ -206,8 +190,7 @@ class AccountFactory:
 
     def create_transaction(self, account, date, amount, name, description, serial, counter_account, balance_after,
                            reference):
-        transaction = Transaction(uuid.uuid4().hex, 0, account, serial, date, int(amount * decimal.Decimal(100)), name,
-                                  description,
-                                  counter_account, int(balance_after * decimal.Decimal(100)), reference, category=None)
+        transaction = Transaction(uuid.uuid4().hex, 0, account, serial, date, amount, name, description,
+                                  counter_account, balance_after, reference, category=None)
         transaction.register_domain_event(TransactionCreatedEvent(transaction))
         return transaction

@@ -102,8 +102,8 @@ class _AccountRepository(AccountRepository):
                 "UPDATE transactions SET version=?, amount=?, date=?, name=?, description=?, balance_after=?, "
                 "serial=?, counter_account=?, reference=?, account=?, category=? "
                 "WHERE id=? ",
-                (transaction.version, transaction._amount, transaction.date, transaction.name, transaction.description,
-                 transaction._balance_after, transaction.serial, transaction.counter_account, transaction.reference,
+                (transaction.version, transaction.amount, transaction.date, transaction.name, transaction.description,
+                 transaction.balance_after, transaction.serial, transaction.counter_account, transaction.reference,
                  transaction.account.id, transaction.category and transaction.category.id or None,
                  transaction.id))
         else:
@@ -111,9 +111,8 @@ class _AccountRepository(AccountRepository):
                 "INSERT INTO transactions (id, version, amount, date, name, description, balance_after, serial,"
                 "counter_account, reference, account, category)"
                 "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-                (transaction.id, transaction.version, int(transaction._amount), transaction.date,
-                 transaction.name,
-                 transaction.description, int(transaction._balance_after), transaction.serial,
+                (transaction.id, transaction.version, transaction.amount, transaction.date, transaction.name,
+                 transaction.description, transaction.balance_after, transaction.serial,
                  transaction.counter_account, transaction.reference, transaction.account.id,
                  transaction.category and transaction.category.id or None))
         if self._cache:
@@ -193,11 +192,11 @@ class _AccountRepository(AccountRepository):
         sql_create_transactions_table = """CREATE TABLE IF NOT EXISTS transactions (
                                             id text PRIMARY KEY,
                                             version integer NOT NULL,
-                                            amount integer NOT NULL,
+                                            amount decimal NOT NULL,
                                             date date NOT NULL,
                                             name text NOT NULL,
                                             description text NOT NULL,
-                                            balance_after integer NOT NULL,
+                                            balance_after decimal NOT NULL,
                                             serial integer,
                                             counter_account text,
                                             reference text,

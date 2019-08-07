@@ -1,7 +1,20 @@
+import decimal
 import logging
 import sqlite3
 
 logger = logging.getLogger(__name__)
+
+
+def _adapt_from_decimal(d):
+    return str(d)
+
+
+def _convert_to_decimal(s):
+    return decimal.Decimal(s.decode('utf-8'))
+
+
+sqlite3.register_adapter(decimal.Decimal, _adapt_from_decimal)
+sqlite3.register_converter("decimal", _convert_to_decimal)
 
 
 class DatabaseSqlite3:

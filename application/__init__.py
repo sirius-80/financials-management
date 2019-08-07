@@ -132,7 +132,7 @@ def transaction_categorized_event_listener(event):
 
 
 def on_transaction_created_event(event):
-    logger.info("Categorizing new transaction: %s", event.transaction)
+    logger.debug("Categorizing new transaction: %s", event.transaction)
     pattern_transaction_mapper = infrastructure.services.get_pattern_mapper("mapping.csv",
                                                                             infrastructure.repositories.category_repository.get_category_repository())
     afas_transaction_mapper = infrastructure.services.afas.get_afas_mapper("AFAS2.csv",
@@ -166,9 +166,6 @@ def log_current_account_info(account_repository):
 
 def initialize_application():
     account_repository = infrastructure.repositories.account_repository.get_account_repository()
-    FORMAT = '%(asctime)-15s %(levelname)-7s [%(name)s] %(message)s'
-    logging.basicConfig(format=FORMAT)
-    logging.getLogger("").setLevel(logging.DEBUG)
     pubsub.pub.subscribe(transaction_categorized_event_listener, "TransactionCategorizedEvent")
     pubsub.pub.subscribe(on_transaction_created_event, "TransactionCreatedEvent")
     generate_categories(infrastructure.repositories.category_repository.get_category_factory(),
