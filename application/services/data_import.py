@@ -53,7 +53,7 @@ logger = logging.getLogger(__name__)
 
 
 def _get_or_create_account(account_name, bank):
-    account = account_repository.get_account_by_name(account_name)
+    account = account_repository.get_account_by_name_and_bank(account_name, bank)
     if not account:
         account = account_factory.create_account(account_name, bank)
         account_repository.update_account(account)

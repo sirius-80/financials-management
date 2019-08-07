@@ -10,7 +10,7 @@ from infrastructure.repositories import get_database, category_repository
 logger = logging.getLogger(__name__)
 
 
-class _AccountCache:
+class _AccountCache(AccountRepository):
     def __init__(self, db):
         self.db = db
         self.accounts = {}
@@ -35,9 +35,9 @@ class _AccountCache:
         # logger.debug("Getting accounts from cache: %s (size=%d)", self.accounts, len(self.accounts))
         return self.accounts.values()
 
-    def get_account_by_name(self, name):
+    def get_account_by_name_and_bank(self, name, bank):
         # logger.debug("Getting account with name %s from cache (%s)", name, self.accounts)
-        cached = next(iter(a for a in self.accounts.values() if a.name == name), None)
+        cached = next(iter(a for a in self.accounts.values() if a.name == name and a.bank == bank), None)
         # logger.debug("Got from cache: %s", cached)
         return cached
 
@@ -75,7 +75,7 @@ class _AccountCache:
 
 class _AccountRepository(AccountRepository):
     """
-    TODO: Consider incorporating an ORM, instead of building my own cache.
+    TODO: Consider incorporating an ORM, instead of using my own cache.
     """
 
     def __init__(self, db, cache):
@@ -163,9 +163,9 @@ class _AccountRepository(AccountRepository):
             else:
                 return None
 
-    def get_account_by_name(self, name):
+    def get_account_by_name_and_bank(self, name, bank):
         if self._cache:
-            return self._cache.get_account_by_name(name)
+            return self._cache.get_account_by_name_and_bank(name, bank)
         else:
             row = self.db.query_one("SELECT * FROM accounts WHERE name=?", (name,))
             if row:

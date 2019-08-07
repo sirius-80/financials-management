@@ -177,23 +177,25 @@ class AccountRepository:
     def get_accounts(self):
         raise NotImplementedError
 
-    def update_transaction(self, transaction):
-        raise NotImplementedError
-
     def get_account_by_id(self, id):
         raise NotImplementedError
 
-    def get_transaction_by_id(self, id):
-        raise NotImplementedError
-
-    def get_account_by_name(self, name):
+    def get_account_by_name_and_bank(self, name, bank):
         raise NotImplementedError
 
     def update_account(self, account):
         raise NotImplementedError
 
+    def get_transaction_by_id(self, id):
+        raise NotImplementedError
+
+    def update_transaction(self, transaction):
+        raise NotImplementedError
+
 
 class AccountFactory:
+    """Abstract class. Override with specific infrastructure."""
+
     def create_account(self, name, bank):
         raise NotImplementedError
 

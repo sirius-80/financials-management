@@ -8,7 +8,7 @@ from infrastructure.repositories import get_database
 logger = logging.getLogger(__name__)
 
 
-class _CategoryCache:
+class _CategoryCache(CategoryRepository):
     def __init__(self, db):
         self.db = db
         self.categories = {}
