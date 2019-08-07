@@ -38,7 +38,13 @@ class CategoryRepository:
     def get_categories(self):
         raise NotImplementedError
 
+    def update_category(self, category):
+        raise NotImplementedError
+
 
 class CategoryFactory:
     def create_category(self, name, parent=None):
+        raise NotImplementedError
+
+    def create_category_from_qualified_name(self, qualified_name):
         raise NotImplementedError

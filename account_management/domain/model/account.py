@@ -137,7 +137,7 @@ class Transaction(Entity):
 
     def __repr__(self):
         return "{c}(id={id!r}, version={version!r}, account={account!r}, date={date!r}, amount={amount!r}," \
-               "name={name!r}, counter_account={counter!r}, description={description!r})".format(
+               "name={name!r}, counter_account={counter!r}, description={description!r}, category={category!r})".format(
             c=self.__class__.__name__,
             id=self.id,
             version=self.version,
@@ -146,7 +146,8 @@ class Transaction(Entity):
             amount=self.amount,
             name=self.name,
             counter=self.counter_account,
-            description=self.description)
+            description=self.description,
+            category=self.category)
 
     def update_category(self, category):
         self.register_domain_event(TransactionCategorizedEvent(self, self.category, category))
@@ -180,6 +181,9 @@ class AccountRepository:
         raise NotImplementedError
 
     def get_account_by_id(self, id):
+        raise NotImplementedError
+
+    def get_transaction_by_id(self, id):
         raise NotImplementedError
 
     def get_account_by_name(self, name):
