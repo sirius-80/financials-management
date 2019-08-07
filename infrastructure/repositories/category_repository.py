@@ -159,34 +159,10 @@ class _CategoryRepository(CategoryRepository):
         self.db.connection.commit()
 
 
-class _CategoryFactory(CategoryFactory):
-    def __init__(self, category_repository):
-        self.repository = category_repository
-
-    def create_category(self, name, parent=None):
-        category = Category(uuid.uuid4().hex, 0, name,
-                            parent and self.repository.get_category_by_qualified_name(parent.qualified_name)or None)
-        # category = self._cache.get_category_by_qualified_name(_temp_category.qualified_name) or _temp_category
-        return category
-
-    def create_category_from_qualified_name(self, qualified_name):
-        logger.debug("%s: Creating category from qualified name %s", self, qualified_name)
-        category = None
-        if not category:
-            next_parent = None
-            for name in qualified_name.split("::"):
-                tmp_category = self.create_category(name, next_parent)
-                category = self.repository.get_category_by_qualified_name(tmp_category.qualified_name) or tmp_category
-                category.parent = next_parent
-                logger.debug("%s: Created category %s (id=%s, parent=%s)", self, category, category.id, category.parent)
-                next_parent = category
-        return category
-
-
 _category_cache = _CategoryCache(get_database())
 _category_cache.init_cache()
 _category_repository = _CategoryRepository(get_database(), _category_cache)
-_category_factory = _CategoryFactory(_category_repository)
+_category_factory = CategoryFactory(_category_repository)
 
 
 def get_category_repository():

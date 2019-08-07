@@ -212,25 +212,9 @@ class _AccountRepository(AccountRepository):
         self.db.connection.commit()
 
 
-class _AccountFactory(AccountFactory):
-    def create_account(self, name, bank):
-        logger.debug("Creating account: %s (%s)", name, bank)
-        account = Account(uuid.uuid4().hex, 0, name, bank)
-        account.register_domain_event(AccountCreatedEvent(account))
-        return account
-
-    def create_transaction(self, account, date, amount, name, description, serial, counter_account, balance_after,
-                           reference):
-        transaction = Transaction(uuid.uuid4().hex, 0, account, serial, date, int(amount * decimal.Decimal(100)), name,
-                                  description,
-                                  counter_account, int(balance_after * decimal.Decimal(100)), reference, category=None)
-        transaction.register_domain_event(TransactionCreatedEvent(transaction))
-        return transaction
-
-
 _account_cache = None
 _account_repository = _AccountRepository(get_database(), _account_cache)
-_account_factory = _AccountFactory()
+_account_factory = AccountFactory()
 
 
 def enable_cache(enabled=True):

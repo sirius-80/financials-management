@@ -1,6 +1,7 @@
 import copy
 import decimal
 import logging
+import uuid
 
 from account_management.domain.model import Entity, DomainEvent
 
@@ -194,11 +195,19 @@ class AccountRepository:
 
 
 class AccountFactory:
-    """Abstract class. Override with specific infrastructure."""
+    """Factory to create new Account and Transaction entities. Note that the caller is responsible to save the created
+    instances using the AccountRepository."""
 
     def create_account(self, name, bank):
-        raise NotImplementedError
+        logger.debug("Creating account: %s (%s)", name, bank)
+        account = Account(uuid.uuid4().hex, 0, name, bank)
+        account.register_domain_event(AccountCreatedEvent(account))
+        return account
 
     def create_transaction(self, account, date, amount, name, description, serial, counter_account, balance_after,
                            reference):
-        raise NotImplementedError
+        transaction = Transaction(uuid.uuid4().hex, 0, account, serial, date, int(amount * decimal.Decimal(100)), name,
+                                  description,
+                                  counter_account, int(balance_after * decimal.Decimal(100)), reference, category=None)
+        transaction.register_domain_event(TransactionCreatedEvent(transaction))
+        return transaction

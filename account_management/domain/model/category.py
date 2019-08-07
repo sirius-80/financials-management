@@ -1,3 +1,5 @@
+import uuid
+
 from account_management.domain.model import Entity
 
 
@@ -43,8 +45,23 @@ class CategoryRepository:
 
 
 class CategoryFactory:
+    """Factory to create new Category entities. Note that the caller is responsible to save the created
+        instances using the CategoryRepository."""
+    def __init__(self, category_repository):
+        self.repository = category_repository
+
     def create_category(self, name, parent=None):
-        raise NotImplementedError
+        category = Category(uuid.uuid4().hex, 0, name,
+                            parent and self.repository.get_category_by_qualified_name(parent.qualified_name) or None)
+        return category
 
     def create_category_from_qualified_name(self, qualified_name):
-        raise NotImplementedError
+        category = None
+        if not category:
+            next_parent = None
+            for name in qualified_name.split("::"):
+                tmp_category = self.create_category(name, next_parent)
+                category = self.repository.get_category_by_qualified_name(tmp_category.qualified_name) or tmp_category
+                category.parent = next_parent
+                next_parent = category
+        return category
