@@ -40,7 +40,7 @@ def get_profit_loss_plot(figure_manager):
     source = ColumnDataSource(data=get_profit_loss_data(figure_manager.granularity))
 
     fig = figure(plot_width=1900, plot_height=300, x_axis_type="datetime",
-                             tools=[hover, "tap", "box_zoom", "wheel_zoom", "reset", "pan"])
+                 tools=[hover, "tap", "box_zoom", "wheel_zoom", "reset", "pan"])
     income_glyph = fig.vbar('date', name='income', top='income', width=24 * 24 * 60 * 60 * 1000, source=source,
                             color="lightgray")
     expenses_glyph = fig.vbar('date', top='expenses', width=24 * 24 * 60 * 60 * 1000, source=source, color="lightgray")
@@ -96,8 +96,8 @@ def get_profit_loss_data(granularity):
         expenses_yearly = []
         income_yearly = []
         for year in range(len(date_list)):
-            expenses_yearly.append(sum(expenses[year*12:min((year+1)*12, len(expenses))]))
-            income_yearly.append(sum(income[year*12:min((year+1)*12, len(income))]))
+            expenses_yearly.append(sum(expenses[year * 12:min((year + 1) * 12, len(expenses))]))
+            income_yearly.append(sum(income[year * 12:min((year + 1) * 12, len(income))]))
         expenses = expenses_yearly
         income = income_yearly
 

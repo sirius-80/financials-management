@@ -13,10 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_balances(date_list):
-    balances = []
-    for date in date_list:
-        balances.append(application.services.get_combined_balance_at(date))
-    return balances
+    return [application.services.get_combined_balance_at(date) for date in date_list]
 
 
 def plot_data_with_bokeh():

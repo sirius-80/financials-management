@@ -37,6 +37,9 @@ class CategoryRepository:
     def get_categories(self):
         raise NotImplementedError
 
+    def get_category(self, category_id):
+        raise NotImplementedError
+
     def get_category_by_qualified_name(self, qualified_name):
         raise NotImplementedError
 

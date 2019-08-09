@@ -1,6 +1,5 @@
 import logging
 import sqlite3
-import uuid
 
 from account_management.domain.model.category import CategoryRepository, CategoryFactory, Category
 from infrastructure.repositories import get_database
@@ -31,9 +30,9 @@ class _CategoryCache(CategoryRepository):
         # logger.debug("Got from cache: %s", cached)
         return cached
 
-    def get_category(self, id):
+    def get_category(self, category_id):
         for cat in self.categories.values():
-            if cat.id == id:
+            if cat.id == category_id:
                 return cat
         else:
             return None
@@ -42,8 +41,8 @@ class _CategoryCache(CategoryRepository):
         # logger.info("Initializing cache...")
         sql = """SELECT * FROM categories"""
 
-        def read_category_by_id(id):
-            row = self.db.query_one("SELECT * FROM categories WHERE id = ?", (id,))
+        def read_category_by_id(category_id):
+            row = self.db.query_one("SELECT * FROM categories WHERE id = ?", (category_id,))
             if row:
                 if row["parent"]:
                     parent = self.get_category(row["parent"]) or read_category_by_id(row["parent"])
@@ -90,13 +89,13 @@ class _CategoryRepository(CategoryRepository):
                 next_parent = category
             return category
 
-    def get_category(self, id):
+    def get_category(self, category_id):
         if self._cache:
-            logger.debug("Retrieving category with id %s from cache", id)
-            return self._cache.get_category(id)
+            logger.debug("Retrieving category with id %s from cache", category_id)
+            return self._cache.get_category(category_id)
         else:
-            logger.debug("Retrieving category with id %s from database", id)
-            row = self.db.query_one("SELECT * FROM categories WHERE id = ?", (id,))
+            logger.debug("Retrieving category with id %s from database", category_id)
+            row = self.db.query_one("SELECT * FROM categories WHERE id = ?", (category_id,))
             logger.debug("Got data: %s", row)
             if row["parent"]:
                 parent = self.get_category(row["parent"])

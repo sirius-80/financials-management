@@ -1,9 +1,6 @@
-import decimal
 import logging
-import uuid
 
-from account_management.domain.model.account import AccountRepository, Account, Transaction, AccountFactory, \
-    AccountCreatedEvent, TransactionCreatedEvent
+from account_management.domain.model.account import AccountRepository, Account, Transaction, AccountFactory
 from infrastructure import publish_domain_events
 from infrastructure.repositories import get_database, category_repository
 
@@ -41,15 +38,15 @@ class _AccountCache(AccountRepository):
         # logger.debug("Got from cache: %s", cached)
         return cached
 
-    def get_account_by_id(self, id):
-        if id in self.accounts.keys():
-            return self.accounts[id]
+    def get_account_by_id(self, account_id):
+        if account_id in self.accounts.keys():
+            return self.accounts[account_id]
         else:
             return None
 
-    def get_transaction_by_id(self, id):
-        if id in self.transactions.keys():
-            return self.transactions[id]
+    def get_transaction_by_id(self, transaction_id):
+        if transaction_id in self.transactions.keys():
+            return self.transactions[transaction_id]
         else:
             return None
 
@@ -133,11 +130,11 @@ class _AccountRepository(AccountRepository):
                 accounts.append(self._collect_transactions(account))
             return accounts
 
-    def get_account_by_id(self, id):
+    def get_account_by_id(self, account_id):
         if self._cache:
-            return self._cache.get_account_by_id(id)
+            return self._cache.get_account_by_id(account_id)
         else:
-            row = self.db.query_one("SELECT * FROM accounts WHERE id=?", (id,))
+            row = self.db.query_one("SELECT * FROM accounts WHERE id=?", (account_id,))
             if row:
                 account = Account(row["id"], row["version"], row["name"], row["bank"])
                 if self._cache:
@@ -146,12 +143,12 @@ class _AccountRepository(AccountRepository):
             else:
                 return None
 
-    def get_transaction_by_id(self, id):
+    def get_transaction_by_id(self, transaction_id):
         if self._cache:
-            transaction = self._cache.get_transaction_by_id(id)
+            transaction = self._cache.get_transaction_by_id(transaction_id)
             return transaction
         else:
-            row = self.db.query_one("SELECT * FROM transactions WHERE id=?", (id,))
+            row = self.db.query_one("SELECT * FROM transactions WHERE id=?", (transaction_id,))
             if row:
                 transaction = Transaction(row["id"], row["version"], row["account"], row["serial"], row["date"],
                                           row["amount"], row["name"], row["description"], row["counter_account"],

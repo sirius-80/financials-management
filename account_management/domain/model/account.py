@@ -1,5 +1,4 @@
 import copy
-import decimal
 import logging
 import uuid
 
@@ -162,7 +161,7 @@ class AccountRepository:
     def get_accounts(self):
         raise NotImplementedError
 
-    def get_account_by_id(self, id):
+    def get_account_by_id(self, account_id):
         raise NotImplementedError
 
     def get_account_by_name_and_bank(self, name, bank):
@@ -171,7 +170,7 @@ class AccountRepository:
     def save_account(self, account):
         raise NotImplementedError
 
-    def get_transaction_by_id(self, id):
+    def get_transaction_by_id(self, transaction_id):
         raise NotImplementedError
 
     def save_transaction(self, transaction):

@@ -176,4 +176,3 @@ def initialize_application():
     initialize_database_when_empty(["transacties-20120101-to-20190430.csv", "transacties-20190501-to-20190725.csv"],
                                    account_repository)
     # initialize_database_when_empty(["transacties-20190501-to-20190725.csv"], account_repository)
-    log_current_account_info(account_repository)

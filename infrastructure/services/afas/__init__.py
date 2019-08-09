@@ -79,7 +79,6 @@ class AfasExport:
                    and (t.date == transaction.date or t.date2 == transaction.date)
                    and transaction.name in t.name
                    and t.counter_account in transaction.counter_account]
-        # and (not t.description.strip() or not transaction.description.strip() or ("".join(t.description.split()) in "".join(transaction.description.split())))]
         if matches:
             if len(matches) >= 1:
                 match = matches[0]
