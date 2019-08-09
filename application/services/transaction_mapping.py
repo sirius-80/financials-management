@@ -1,4 +1,4 @@
-from account_management.domain.services import TransactionCategoryMapper
+from domain.account_management.services import TransactionCategoryMapper
 import infrastructure.repositories.account_repository
 import infrastructure.repositories.category_repository
 

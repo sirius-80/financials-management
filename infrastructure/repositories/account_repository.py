@@ -1,6 +1,6 @@
 import logging
 
-from account_management.domain.model.account import AccountRepository, Account, Transaction, AccountFactory
+from domain.account_management.model.account import AccountRepository, Account, Transaction, AccountFactory
 from infrastructure import publish_domain_events
 from infrastructure.repositories import get_database, category_repository
 

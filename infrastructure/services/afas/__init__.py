@@ -2,7 +2,7 @@ import csv
 
 import datetime
 
-from account_management.domain.services import TransactionCategoryMapper
+from domain.account_management.services import TransactionCategoryMapper
 
 
 def parse_csv(filename, category_repo):

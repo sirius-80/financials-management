@@ -1,4 +1,5 @@
 def find_transactions_by_attributes(account, date, serial, amount, name, counter_account, description):
+    """Returns all transactions in given account that exactly match given set of attributes."""
     matches = []
     for t in account.get_transactions():
         if t.date == date \

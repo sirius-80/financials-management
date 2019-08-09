@@ -2,7 +2,7 @@ import copy
 import logging
 import uuid
 
-from account_management.domain.model import Entity, DomainEvent
+from domain.account_management.model import Entity, DomainEvent
 
 logger = logging.getLogger(__name__)
 

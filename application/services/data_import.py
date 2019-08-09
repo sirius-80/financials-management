@@ -3,7 +3,7 @@ import datetime
 import decimal
 import logging
 
-from account_management.domain import services
+from domain.account_management import services
 import infrastructure.repositories.account_repository
 
 

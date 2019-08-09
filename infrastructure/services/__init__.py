@@ -1,7 +1,7 @@
 import csv
 import re
 
-from account_management.domain.services import TransactionCategoryMapper
+from domain.account_management.services import TransactionCategoryMapper
 
 
 class _PatternTransactionCategoryMapper(TransactionCategoryMapper):

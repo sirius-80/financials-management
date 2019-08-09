@@ -1,7 +1,7 @@
 import logging
 import sqlite3
 
-from account_management.domain.model.category import CategoryRepository, CategoryFactory, Category
+from domain.account_management.model.category import CategoryRepository, CategoryFactory, Category
 from infrastructure.repositories import get_database
 
 logger = logging.getLogger(__name__)

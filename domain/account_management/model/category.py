@@ -1,6 +1,6 @@
 import uuid
 
-from account_management.domain.model import Entity
+from domain.account_management.model import Entity
 
 
 class Category(Entity):
