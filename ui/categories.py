@@ -5,7 +5,7 @@ import dateutil
 from bokeh.events import Tap, PanEnd
 from bokeh.layouts import column
 from bokeh.models import ColumnDataSource, HoverTool, TapTool, TableColumn, DateFormatter, NumberFormatter, \
-    SelectEditor, DataTable, Select, WidgetBox
+    SelectEditor, DataTable, Select, WidgetBox, NumeralTickFormatter
 from bokeh.plotting import figure
 
 import application.services
@@ -40,6 +40,7 @@ def get_category_plot(figure_manager):
     fig = figure(plot_width=1900, plot_height=300, x_axis_type="datetime",
                  tools=[hover, "tap", "box_zoom", "wheel_zoom", "reset", "pan"])
     plot = fig.vbar('date', top='amount', width=24 * 24 * 60 * 60 * 1000, source=amounts_source)
+    fig.yaxis.formatter = NumeralTickFormatter(format="0,0")
     fig.select(type=TapTool)
 
     columns = [
