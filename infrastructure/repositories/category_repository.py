@@ -48,7 +48,7 @@ class _CategoryCache(CategoryRepository):
                     parent = self.get_category(row["parent"]) or read_category_by_id(row["parent"])
                 else:
                     parent = None
-                category = self.get_category(row["id"]) or Category(row["id"], row["version"], row["name"], parent)
+                category = self.get_category(row["id"]) or Category(row["id"], row["name"], parent)
                 self.save_category(category)
                 return category
             else:
@@ -63,7 +63,7 @@ class _CategoryCache(CategoryRepository):
                     assert parent
                 else:
                     parent = None
-                category = self.get_category(row["id"]) or Category(row["id"], row["version"], row["name"], parent)
+                category = self.get_category(row["id"]) or Category(row["id"], row["name"], parent)
                 self.save_category(category)
         except sqlite3.Error as e:
             logger.warning("%s: No data from database: %s", self, e)
@@ -85,7 +85,7 @@ class _CategoryRepository(CategoryRepository):
             category = None
             for name in names:
                 row = self.db.query_one("SELECT * FROM categories WHERE name = ? ", (name,))
-                category = Category(row["id"], row["version"], row["name"], next_parent)
+                category = Category(row["id"], row["name"], next_parent)
                 next_parent = category
             return category
 
@@ -101,7 +101,7 @@ class _CategoryRepository(CategoryRepository):
                 parent = self.get_category(row["parent"])
             else:
                 parent = None
-            category = Category(row["id"], row["version"], row["name"], parent)
+            category = Category(row["id"], row["name"], parent)
             if self._cache:
                 self._cache.save_category(category)
 
@@ -115,7 +115,7 @@ class _CategoryRepository(CategoryRepository):
 
             # First construct all categories with parent id's (since the parent may not be constructed yet)
             for row in self.db.query("SELECT * FROM categories"):
-                categories.append(Category(row["id"], row["version"], row["name"], row["parent"]))
+                categories.append(Category(row["id"], row["name"], row["parent"]))
 
             # Then resolve the parents
             for category in categories:
@@ -132,15 +132,9 @@ class _CategoryRepository(CategoryRepository):
         logger.debug("%s: update_category(%s (id=%s))", self, category, category.id)
         cursor = self.db.connection.cursor()
         if not self.get_category_by_qualified_name(category.qualified_name):
-            #     logger.debug("%s: Updating existing database entry %s (id=%s)", self, category, category.id)
-            #     cursor.execute("UPDATE categories SET version=?, name=?, parent=? WHERE id=?",
-            #                    (category.version, category.name, category.parent and category.parent.id or None,
-            #                     category.id))
-            # else:
             logger.debug("%s: Creating new database entry %s (id=%s)", self, category, category.id)
-            cursor.execute("INSERT INTO categories (id, version, name, parent) VALUES (?, ?, ?, ?)",
-                           (category.id, category.version, category.name,
-                            category.parent and category.parent.id or None))
+            cursor.execute("INSERT INTO categories (id, name, parent) VALUES (?, ?, ?)",
+                           (category.id, category.name, category.parent and category.parent.id or None))
         if category.parent and not self.get_category_by_qualified_name(category.parent.qualified_name):
             self.save_category(category.parent)
 
@@ -149,7 +143,6 @@ class _CategoryRepository(CategoryRepository):
     def _create_tables(self):
         sql_create_categories_table = """CREATE TABLE IF NOT EXISTS categories (
                                             id text PRIMARY KEY,
-                                            version integer NOT NULL,
                                             name text NOT NULL,
                                             parent text,
                                             FOREIGN KEY (parent) REFERENCES categories (id)

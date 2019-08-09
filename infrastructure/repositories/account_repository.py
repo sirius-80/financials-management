@@ -55,13 +55,13 @@ class _AccountCache(AccountRepository):
         sql = """SELECT * FROM accounts"""
         account_rows = self.db.query(sql)
         for row in account_rows:
-            account = Account(row["id"], row["version"], row["name"], row["bank"])
+            account = Account(row["id"], row["name"], row["bank"])
             self.save_account(account)
 
             logger.debug("Fetching transactions for account %s", account)
             for trow in self.db.query("SELECT * FROM transactions WHERE account = ?", (account.id,)):
                 category = category_repository.get_category_repository().get_category(trow["category"])
-                transaction = Transaction(trow["id"], trow["version"], account, trow["serial"], trow["date"],
+                transaction = Transaction(trow["id"], account, trow["serial"], trow["date"],
                                           trow["amount"], trow["name"], trow["description"], trow["counter_account"],
                                           trow["balance_after"], trow["reference"], category)
                 self.save_transaction(transaction)
@@ -83,11 +83,11 @@ class _AccountRepository(AccountRepository):
     def save_account(self, account):
         cursor = self.db.connection.cursor()
         if self.get_account_by_id(account.id):
-            cursor.execute("UPDATE accounts SET version=?, name=?, bank=? WHERE id=?",
-                           (account.version, account.name, account.bank, account.id))
+            cursor.execute("UPDATE accounts SET name=?, bank=? WHERE id=?",
+                           (account.name, account.bank, account.id))
         else:
-            cursor.execute("INSERT INTO accounts (id, version, name, bank) VALUES (?,?,?,?)",
-                           (account.id, account.version, account.name, account.bank))
+            cursor.execute("INSERT INTO accounts (id, name, bank) VALUES (?,?,?)",
+                           (account.id, account.name, account.bank))
         if self._cache:
             self._cache.save_account(account)
         publish_domain_events(account.flush_domain_events())
@@ -96,19 +96,19 @@ class _AccountRepository(AccountRepository):
         cursor = self.db.connection.cursor()
         if self.get_transaction_by_id(transaction.id):
             cursor.execute(
-                "UPDATE transactions SET version=?, amount=?, date=?, name=?, description=?, balance_after=?, "
+                "UPDATE transactions SET amount=?, date=?, name=?, description=?, balance_after=?, "
                 "serial=?, counter_account=?, reference=?, account=?, category=? "
                 "WHERE id=? ",
-                (transaction.version, transaction.amount, transaction.date, transaction.name, transaction.description,
+                (transaction.amount, transaction.date, transaction.name, transaction.description,
                  transaction.balance_after, transaction.serial, transaction.counter_account, transaction.reference,
                  transaction.account.id, transaction.category and transaction.category.id or None,
                  transaction.id))
         else:
             cursor.execute(
-                "INSERT INTO transactions (id, version, amount, date, name, description, balance_after, serial,"
+                "INSERT INTO transactions (id, amount, date, name, description, balance_after, serial,"
                 "counter_account, reference, account, category)"
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-                (transaction.id, transaction.version, transaction.amount, transaction.date, transaction.name,
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                (transaction.id, transaction.amount, transaction.date, transaction.name,
                  transaction.description, transaction.balance_after, transaction.serial,
                  transaction.counter_account, transaction.reference, transaction.account.id,
                  transaction.category and transaction.category.id or None))
@@ -126,7 +126,7 @@ class _AccountRepository(AccountRepository):
             account_rows = self.db.query(sql)
             accounts = []
             for row in account_rows:
-                account = Account(row["id"], row["version"], row["name"], row["bank"])
+                account = Account(row["id"], row["name"], row["bank"])
                 accounts.append(self._collect_transactions(account))
             return accounts
 
@@ -136,7 +136,7 @@ class _AccountRepository(AccountRepository):
         else:
             row = self.db.query_one("SELECT * FROM accounts WHERE id=?", (account_id,))
             if row:
-                account = Account(row["id"], row["version"], row["name"], row["bank"])
+                account = Account(row["id"], row["name"], row["bank"])
                 if self._cache:
                     self._cache.save_account(account)
                 return self._collect_transactions(account)
@@ -150,7 +150,7 @@ class _AccountRepository(AccountRepository):
         else:
             row = self.db.query_one("SELECT * FROM transactions WHERE id=?", (transaction_id,))
             if row:
-                transaction = Transaction(row["id"], row["version"], row["account"], row["serial"], row["date"],
+                transaction = Transaction(row["id"], row["account"], row["serial"], row["date"],
                                           row["amount"], row["name"], row["description"], row["counter_account"],
                                           row["balance_after"], row["reference"], row["category"])
                 if self._cache:
@@ -165,7 +165,7 @@ class _AccountRepository(AccountRepository):
         else:
             row = self.db.query_one("SELECT * FROM accounts WHERE name=?", (name,))
             if row:
-                account = Account(row["id"], row["version"], row["name"], row["bank"])
+                account = Account(row["id"], row["name"], row["bank"])
                 return self._collect_transactions(account)
             else:
                 return None
@@ -173,7 +173,7 @@ class _AccountRepository(AccountRepository):
     def _collect_transactions(self, account):
         logger.debug("Fetching transactions for account %s", account)
         for trow in self.db.query("SELECT * FROM transactions WHERE account = ?", (account.id,)):
-            account.add_transaction(Transaction(trow["id"], trow["version"], account, trow["serial"], trow["date"],
+            account.add_transaction(Transaction(trow["id"], account, trow["serial"], trow["date"],
                                                 trow["amount"], trow["name"], trow["description"],
                                                 trow["counter_account"], trow["balance_after"], trow["reference"],
                                                 trow["category"]))
@@ -182,13 +182,11 @@ class _AccountRepository(AccountRepository):
     def _create_tables(self):
         sql_create_accounts_table = """CREATE TABLE IF NOT EXISTS accounts (
                                         id text PRIMARY KEY,
-                                        version integer NOT NULL,
                                         name text NOT NULL,
                                         bank text NOT NULL
                                         );"""
         sql_create_transactions_table = """CREATE TABLE IF NOT EXISTS transactions (
                                             id text PRIMARY KEY,
-                                            version integer NOT NULL,
                                             amount decimal NOT NULL,
                                             date date NOT NULL,
                                             name text NOT NULL,

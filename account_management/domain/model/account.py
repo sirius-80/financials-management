@@ -8,17 +8,16 @@ logger = logging.getLogger(__name__)
 
 
 class Account(Entity):
-    def __init__(self, account_id, account_version, name, bank):
-        super().__init__(account_id, account_version)
+    def __init__(self, account_id, name, bank):
+        super().__init__(account_id)
         self.name = name
         self.bank = bank
         self.transactions = []
 
     def __repr__(self):
-        return "{c}(id={id}, version={version!r}, name={name}, bank={bank!r}".format(
+        return "{c}(id={id}, name={name}, bank={bank!r}".format(
             c=self.__class__.__name__,
             id=self.id,
-            version=self.version,
             name=self.name,
             bank=self.bank
         )
@@ -121,9 +120,9 @@ class TransactionCreatedEvent(DomainEvent):
 
 
 class Transaction(Entity):
-    def __init__(self, transaction_id, transaction_version, account, serial, date, amount, name, description,
+    def __init__(self, transaction_id, account, serial, date, amount, name, description,
                  counter_account, balance_after, reference, category):
-        super().__init__(transaction_id, transaction_version)
+        super().__init__(transaction_id)
         self.account = account
         self.serial = serial
         self.date = date
@@ -136,11 +135,10 @@ class Transaction(Entity):
         self.category = category
 
     def __repr__(self):
-        return "{c}(id={id!r}, version={version!r}, account={account!r}, date={date!r}, amount={amount!r}," \
+        return "{c}(id={id!r}, account={account!r}, date={date!r}, amount={amount!r}," \
                "name={name!r}, counter_account={counter!r}, description={description!r}, category={category!r})".format(
             c=self.__class__.__name__,
             id=self.id,
-            version=self.version,
             account=self.account,
             date=self.date,
             amount=self.amount,
@@ -152,7 +150,6 @@ class Transaction(Entity):
     def update_category(self, category):
         self.register_domain_event(TransactionCategorizedEvent(self, self.category, category))
         self.category = category
-        self.version += 1
 
 
 class AccountRepository:
@@ -183,13 +180,13 @@ class AccountFactory:
 
     def create_account(self, name, bank):
         logger.debug("Creating account: %s (%s)", name, bank)
-        account = Account(uuid.uuid4().hex, 0, name, bank)
+        account = Account(uuid.uuid4().hex, name, bank)
         account.register_domain_event(AccountCreatedEvent(account))
         return account
 
     def create_transaction(self, account, date, amount, name, description, serial, counter_account, balance_after,
                            reference):
-        transaction = Transaction(uuid.uuid4().hex, 0, account, serial, date, amount, name, description,
+        transaction = Transaction(uuid.uuid4().hex, account, serial, date, amount, name, description,
                                   counter_account, balance_after, reference, category=None)
         transaction.register_domain_event(TransactionCreatedEvent(transaction))
         return transaction

@@ -1,7 +1,6 @@
 class Entity:
-    def __init__(self, entity_id, version):
+    def __init__(self, entity_id):
         self.id = entity_id
-        self.version = version
         self._domain_events = []
 
     def register_domain_event(self, event):

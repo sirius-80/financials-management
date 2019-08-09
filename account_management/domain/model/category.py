@@ -4,8 +4,8 @@ from account_management.domain.model import Entity
 
 
 class Category(Entity):
-    def __init__(self, category_id, category_version, name, parent=None):
-        super().__init__(category_id, category_version)
+    def __init__(self, category_id, name, parent=None):
+        super().__init__(category_id)
         self.name = name
         self.parent = parent
 
@@ -54,7 +54,7 @@ class CategoryFactory:
         self.repository = category_repository
 
     def create_category(self, name, parent=None):
-        category = Category(uuid.uuid4().hex, 0, name,
+        category = Category(uuid.uuid4().hex, name,
                             parent and self.repository.get_category_by_qualified_name(parent.qualified_name) or None)
         return category
 
