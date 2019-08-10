@@ -1,7 +1,7 @@
 import logging
 
 from bokeh.events import PanEnd
-from bokeh.models import ColumnDataSource, HoverTool, Span, NumeralTickFormatter
+from bokeh.models import ColumnDataSource, HoverTool, Span, NumeralTickFormatter, Title
 from bokeh.plotting import figure
 
 import application.services
@@ -28,6 +28,7 @@ def get_balance_plot(figure_manager):
     fig.yaxis.formatter = NumeralTickFormatter(format="0,0")
 
     balance_plot = fig.line(x='date', y='balance', source=source, line_width=5, color="navy", alpha=0.5)
+    fig.title = Title(text="Account balance")
     zero_line = Span(location=0, dimension="width", line_color="black", line_dash="dashed", line_width=3)
     fig.add_layout(zero_line)
     min_line = Span(location=min(data['balance']), dimension="width", line_color="red", line_dash="dashed",
