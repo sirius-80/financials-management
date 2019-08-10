@@ -3,7 +3,7 @@ import logging
 # noinspection PyPackageRequirements
 import pubsub.pub
 
-import application.services.data_import
+import application.services.data_import.rabobank
 import infrastructure.repositories.account_repository
 import infrastructure.repositories.category_repository
 import infrastructure.services
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 def import_rabobank_transactions(filename_list):
     for csv in filename_list:
-        application.services.data_import.import_transactions_from_rabobank_csv(csv, RABOBANK)
+        application.services.data_import.rabobank.import_transactions_from_rabobank_csv(csv, RABOBANK)
 
 
 def generate_category(category_repository, category_factory, qualified_name):
