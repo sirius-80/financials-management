@@ -15,7 +15,7 @@ RABOBANK = "Rabobank"
 logger = logging.getLogger(__name__)
 
 
-def import_transactions(filename_list):
+def import_rabobank_transactions(filename_list):
     for csv in filename_list:
         application.services.data_import.import_transactions_from_rabobank_csv(csv, RABOBANK)
 
@@ -126,8 +126,8 @@ def generate_categories(category_factory, category_repository):
     infrastructure.repositories.get_database().connection.commit()
 
 
-def transaction_categorized_event_listener(event):
-    logger.debug("%s received: Category %s => %s for transaction %s", event.__class__.__name__, event.old_category,
+def on_transaction_categorized_event(event):
+    logger.debug("Changed category %s => %s for transaction %s", event.__class__.__name__, event.old_category,
                  event.new_category, event.transaction)
 
 
@@ -150,12 +150,6 @@ def on_transaction_created_event(event):
                     infrastructure.repositories.account_repository.get_account_repository())
 
 
-def initialize_database_when_empty(filename_list, account_repository):
-    if not account_repository.get_accounts():
-        import_transactions(filename_list)
-        infrastructure.repositories.get_database().connection.commit()
-
-
 def log_current_account_info(account_repository):
     logger.debug("accounts: %s", account_repository.get_accounts())
     for account in account_repository.get_accounts():
@@ -165,14 +159,8 @@ def log_current_account_info(account_repository):
 
 
 def initialize_application():
-    account_repository = infrastructure.repositories.account_repository.get_account_repository()
-    pubsub.pub.subscribe(transaction_categorized_event_listener, "TransactionCategorizedEvent")
+    pubsub.pub.subscribe(on_transaction_categorized_event, "TransactionCategorizedEvent")
     pubsub.pub.subscribe(on_transaction_created_event, "TransactionCreatedEvent")
     generate_categories(infrastructure.repositories.category_repository.get_category_factory(),
                         infrastructure.repositories.category_repository.get_category_repository())
-
-    # TODO: Control caching from cmd-line parameter?
     infrastructure.repositories.account_repository.enable_cache()
-    initialize_database_when_empty(["transacties-20120101-to-20190430.csv", "transacties-20190501-to-20190725.csv"],
-                                   account_repository)
-    # initialize_database_when_empty(["transacties-20190501-to-20190725.csv"], account_repository)
