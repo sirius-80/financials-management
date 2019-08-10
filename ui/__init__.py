@@ -22,7 +22,7 @@ def plot_data_with_bokeh():
     profit_loss_plot = get_profit_loss_plot(figure_manager)
     amount_per_category_plot = get_category_plot(figure_manager)
 
-    curdoc().add_root(column(balance_plot, profit_loss_plot, amount_per_category_plot))
+    curdoc().add_root(column(balance_plot, profit_loss_plot, amount_per_category_plot, sizing_mode='stretch_width'))
 
 
 class FigureManager:

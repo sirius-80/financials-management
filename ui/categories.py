@@ -3,7 +3,7 @@ import pprint
 
 import dateutil
 from bokeh.events import Tap, PanEnd
-from bokeh.layouts import column
+from bokeh.layouts import column, row
 from bokeh.models import ColumnDataSource, HoverTool, TapTool, TableColumn, DateFormatter, NumberFormatter, \
     SelectEditor, DataTable, Select, WidgetBox, NumeralTickFormatter
 from bokeh.plotting import figure
@@ -37,7 +37,7 @@ def get_category_plot(figure_manager):
         },
         mode='vline'
     )
-    fig = figure(plot_width=1900, plot_height=300, x_axis_type="datetime",
+    fig = figure(sizing_mode='stretch_width', plot_height=300, x_axis_type="datetime",
                  tools=[hover, "tap", "box_zoom", "wheel_zoom", "reset", "pan"])
     plot = fig.vbar('date', top='amount', width=24 * 24 * 60 * 60 * 1000, source=amounts_source)
     fig.yaxis.formatter = NumeralTickFormatter(format="0,0")
@@ -64,7 +64,8 @@ def get_category_plot(figure_manager):
         counter_account=[]
     )
     transaction_source = ColumnDataSource(transaction_data)
-    transactions_table = DataTable(source=transaction_source, columns=columns, width=1880, editable=True)
+    transactions_table = DataTable(source=transaction_source, columns=columns, fit_columns=True, editable=True,
+                                   width=1500)
 
     def on_update_category(attr, old, new):
         logger.debug("on_update_category %s::%s => %s", attr, old, new)
@@ -160,9 +161,9 @@ def get_category_plot(figure_manager):
         update_plot()
 
     category_selector = Select(title="Category", options=["None"] + [str(c) for c in
-                                                                     category_repository.get_categories()])
+                                                                     category_repository.get_categories()], width=200)
     category_selector.on_change('value', update_category)
-    date_range_selector = Select(title="Granularity", options=["Month", "Year"])
+    date_range_selector = Select(title="Granularity", options=["Month", "Year"], width=200)
     date_range_selector.on_change('value', update_date_range)
     inputs = WidgetBox(category_selector, date_range_selector)
 
@@ -171,5 +172,4 @@ def get_category_plot(figure_manager):
 
     fig.on_event(PanEnd, on_pan)
     figure_manager.register_figure(fig)
-
-    return column(fig, inputs, transactions_table)
+    return column(fig, row(inputs, transactions_table, sizing_mode='stretch_width'), sizing_mode='stretch_width')

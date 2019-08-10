@@ -2,7 +2,6 @@ import logging
 
 import dateutil.relativedelta
 from bokeh.events import PanEnd
-from bokeh.layouts import column
 from bokeh.models import ColumnDataSource, HoverTool, NumeralTickFormatter
 from bokeh.plotting import figure
 
@@ -39,7 +38,7 @@ def get_profit_loss_plot(figure_manager):
 
     source = ColumnDataSource(data=get_profit_loss_data(figure_manager.granularity))
 
-    fig = figure(plot_width=1900, plot_height=300, x_axis_type="datetime",
+    fig = figure(sizing_mode='stretch_width', plot_height=300, x_axis_type="datetime",
                  tools=[hover, "tap", "box_zoom", "wheel_zoom", "reset", "pan"])
     fig.yaxis.formatter = NumeralTickFormatter(format="0,0")
 
@@ -61,7 +60,7 @@ def get_profit_loss_plot(figure_manager):
     _data['source'] = source
     figure_manager.register_granularity_callback(set_granularity)
 
-    return column(fig)
+    return fig
 
 
 def set_granularity(granularity):

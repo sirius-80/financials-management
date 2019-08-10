@@ -23,7 +23,7 @@ def get_balance_plot(figure_manager):
     )
     data = get_balance_data()
     source = ColumnDataSource(data=data)
-    fig = figure(plot_width=1900, plot_height=300, x_axis_type="datetime",
+    fig = figure(sizing_mode='stretch_width', plot_height=300, x_axis_type="datetime",
                  tools=[hover, "tap", "box_zoom", "wheel_zoom", "reset", "pan"])
     fig.yaxis.formatter = NumeralTickFormatter(format="0,0")
 
