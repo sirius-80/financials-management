@@ -1,7 +1,7 @@
 import logging
 
 import dateutil.relativedelta
-from bokeh.events import PanEnd
+from bokeh.events import PanEnd, Reset
 from bokeh.models import ColumnDataSource, HoverTool, NumeralTickFormatter, Title
 from bokeh.plotting import figure
 
@@ -41,6 +41,8 @@ def get_profit_loss_plot(figure_manager):
     fig = figure(sizing_mode='stretch_width', plot_height=300, x_axis_type="datetime",
                  tools=[hover, "tap", "box_zoom", "wheel_zoom", "reset", "pan"])
     fig.title = Title(text="Income/expenses & profit/loss")
+    fig.min_border_left = 80
+    fig.min_border_right = 40
     fig.yaxis.formatter = NumeralTickFormatter(format="0,0")
 
     income_glyph = fig.vbar('date', name='income', top='income', width=24 * 24 * 60 * 60 * 1000, source=source,
@@ -54,6 +56,7 @@ def get_profit_loss_plot(figure_manager):
         figure_manager.update_x_range(fig.x_range)
 
     fig.on_event(PanEnd, on_pan)
+    fig.on_event(Reset, on_pan)
     figure_manager.register_figure(fig)
 
     _data['figure'] = fig

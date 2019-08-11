@@ -2,7 +2,7 @@ import logging
 import pprint
 
 import dateutil
-from bokeh.events import Tap, PanEnd
+from bokeh.events import Tap, PanEnd, Reset
 from bokeh.layouts import column, row
 from bokeh.models import ColumnDataSource, HoverTool, TapTool, TableColumn, DateFormatter, NumberFormatter, \
     SelectEditor, DataTable, Select, WidgetBox, NumeralTickFormatter, Title
@@ -40,6 +40,8 @@ def get_category_plot(figure_manager):
     fig = figure(sizing_mode='stretch_width', plot_height=300, x_axis_type="datetime",
                  tools=[hover, "tap", "box_zoom", "wheel_zoom", "reset", "pan"])
     fig.title = Title(text="Income/expenses per category")
+    fig.min_border_left = 80
+    fig.min_border_right = 40
     plot = fig.vbar('date', top='amount', width=24 * 24 * 60 * 60 * 1000, source=amounts_source)
     fig.yaxis.formatter = NumeralTickFormatter(format="0,0")
     fig.select(type=TapTool)
@@ -144,6 +146,8 @@ def get_category_plot(figure_manager):
             plot.glyph.width = 300 * 24 * 60 * 60 * 1000
         else:
             plot.glyph.width = 24 * 24 * 60 * 60 * 1000
+        fig.y_range.start = min(0, min(data['amount'])) - 0.1 * (max(data['amount']) - min(data['amount']))
+        fig.y_range.end = max(data['amount']) + 0.1 * (max(data['amount']) - min(data['amount']))
         amounts_source.data = data
 
     def update_category(attrname, old, new):
@@ -172,5 +176,7 @@ def get_category_plot(figure_manager):
         figure_manager.update_x_range(fig.x_range)
 
     fig.on_event(PanEnd, on_pan)
+    fig.on_event(Reset, on_pan)
+
     figure_manager.register_figure(fig)
     return column(fig, row(inputs, transactions_table, sizing_mode='stretch_width'), sizing_mode='stretch_width')
