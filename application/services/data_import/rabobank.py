@@ -23,11 +23,11 @@ def import_transactions_from_rabobank_csv(filename, bank):
             name = " ".join(row["Naam tegenpartij"].split())
 
             description = " ".join(
-                row["Omschrijving-1"].split() + row["Omschrijving-2"].split() + row["Omschrijving-3"].split())
+                row["Omschrijving-1"].split() + row["Omschrijving-2"].split() + row["Omschrijving-3"].split() + row[
+                    "Betalingskenmerk"].split())
             serial = int(row["Volgnr"].lstrip("0"))
             counter_account = row["Tegenrekening IBAN/BBAN"]
             balance = decimal.Decimal(row["Saldo na trn"].replace(",", "."))
-            reference = row["Betalingskenmerk"]
 
             # Only create a new transaction if no identical transaction already exists!
             existing_transactions = services.find_transactions_by_attributes(account, date, serial, amount,
@@ -40,7 +40,7 @@ def import_transactions_from_rabobank_csv(filename, bank):
                     logger.debug("Skipping duplicate transaction: %s", existing_transactions[0])
             else:
                 transaction = account_factory.create_transaction(account, date, amount, name, description, serial,
-                                                                 counter_account, balance, reference)
+                                                                 counter_account, balance)
                 account_repository.save_transaction(transaction)
                 account.add_transaction(transaction)
 

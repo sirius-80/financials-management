@@ -63,7 +63,7 @@ class _AccountCache(AccountRepository):
                 category = category_repository.get_category_repository().get_category(trow["category"])
                 transaction = Transaction(trow["id"], account, trow["serial"], trow["date"],
                                           trow["amount"], trow["name"], trow["description"], trow["counter_account"],
-                                          trow["balance_after"], trow["reference"], category)
+                                          trow["balance_after"], category)
                 self.save_transaction(transaction)
                 account.add_transaction(transaction)
 
@@ -97,20 +97,19 @@ class _AccountRepository(AccountRepository):
         if self.get_transaction_by_id(transaction.id):
             cursor.execute(
                 "UPDATE transactions SET amount=?, date=?, name=?, description=?, balance_after=?, "
-                "serial=?, counter_account=?, reference=?, account=?, category=? "
+                "serial=?, counter_account=?, account=?, category=? "
                 "WHERE id=? ",
                 (transaction.amount, transaction.date, transaction.name, transaction.description,
-                 transaction.balance_after, transaction.serial, transaction.counter_account, transaction.reference,
-                 transaction.account.id, transaction.category and transaction.category.id or None,
-                 transaction.id))
+                 transaction.balance_after, transaction.serial, transaction.counter_account, transaction.account.id,
+                 transaction.category and transaction.category.id or None, transaction.id))
         else:
             cursor.execute(
                 "INSERT INTO transactions (id, amount, date, name, description, balance_after, serial,"
-                "counter_account, reference, account, category)"
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                "counter_account, account, category)"
+                "VALUES (?,?,?,?,?,?,?,?,?,?)",
                 (transaction.id, transaction.amount, transaction.date, transaction.name,
                  transaction.description, transaction.balance_after, transaction.serial,
-                 transaction.counter_account, transaction.reference, transaction.account.id,
+                 transaction.counter_account, transaction.account.id,
                  transaction.category and transaction.category.id or None))
         if self._cache:
             self._cache.save_transaction(transaction)
@@ -152,7 +151,7 @@ class _AccountRepository(AccountRepository):
             if row:
                 transaction = Transaction(row["id"], row["account"], row["serial"], row["date"],
                                           row["amount"], row["name"], row["description"], row["counter_account"],
-                                          row["balance_after"], row["reference"], row["category"])
+                                          row["balance_after"], row["category"])
                 if self._cache:
                     self._cache.save_transaction(transaction)
                 return transaction
@@ -175,8 +174,7 @@ class _AccountRepository(AccountRepository):
         for trow in self.db.query("SELECT * FROM transactions WHERE account = ?", (account.id,)):
             account.add_transaction(Transaction(trow["id"], account, trow["serial"], trow["date"],
                                                 trow["amount"], trow["name"], trow["description"],
-                                                trow["counter_account"], trow["balance_after"], trow["reference"],
-                                                trow["category"]))
+                                                trow["counter_account"], trow["balance_after"], trow["category"]))
         return account
 
     def _create_tables(self):
@@ -194,7 +192,6 @@ class _AccountRepository(AccountRepository):
                                             balance_after decimal NOT NULL,
                                             serial integer,
                                             counter_account text,
-                                            reference text,
                                             account integer NOT NULL,
                                             category text,
                                             FOREIGN KEY (account) REFERENCES accounts (id),

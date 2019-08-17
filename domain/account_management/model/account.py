@@ -121,7 +121,7 @@ class TransactionCreatedEvent(DomainEvent):
 
 class Transaction(Entity):
     def __init__(self, transaction_id, account, serial, date, amount, name, description,
-                 counter_account, balance_after, reference, category):
+                 counter_account, balance_after, category):
         super().__init__(transaction_id)
         self.account = account
         self.serial = serial
@@ -131,7 +131,6 @@ class Transaction(Entity):
         self.description = description
         self.counter_account = counter_account
         self.balance_after = balance_after
-        self.reference = reference
         self.category = category
 
     def __repr__(self):
@@ -184,9 +183,8 @@ class AccountFactory:
         account.register_domain_event(AccountCreatedEvent(account))
         return account
 
-    def create_transaction(self, account, date, amount, name, description, serial, counter_account, balance_after,
-                           reference):
-        transaction = Transaction(uuid.uuid4().hex, account, serial, date, amount, name, description,
-                                  counter_account, balance_after, reference, category=None)
+    def create_transaction(self, account, date, amount, name, description, serial, counter_account, balance_after):
+        transaction = Transaction(uuid.uuid4().hex, account, serial, date, amount, name, description, counter_account,
+                                  balance_after, category=None)
         transaction.register_domain_event(TransactionCreatedEvent(transaction))
         return transaction
