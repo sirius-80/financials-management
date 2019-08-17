@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_combined_balance_at(date):
-    accounts = infrastructure.repositories.account_repository.get_account_repository().get_accounts()
+    accounts = infrastructure.Repositories.account_repository().get_accounts()
     balance = 0
     for account in accounts:
         balance += account.get_balance_at(date)
@@ -15,7 +15,7 @@ def get_combined_balance_at(date):
 
 
 def get_combined_amount_for_category_in_month(category, date):
-    accounts = infrastructure.repositories.account_repository.get_account_repository().get_accounts()
+    accounts = infrastructure.Repositories.account_repository().get_accounts()
     amount = 0
     for account in accounts:
         amount += account.get_combined_amount_for_category_in_month(category, date)
@@ -23,7 +23,7 @@ def get_combined_amount_for_category_in_month(category, date):
 
 
 def get_transactions_between(start_date, end_date):
-    accounts = infrastructure.repositories.account_repository.get_account_repository().get_accounts()
+    accounts = infrastructure.Repositories.account_repository().get_accounts()
     transactions = []
     for account in accounts:
         transactions.extend(account.get_transactions_between(start_date, end_date))
@@ -31,7 +31,7 @@ def get_transactions_between(start_date, end_date):
 
 
 def get_transactions_for_category_between(start_date, end_date, category):
-    accounts = infrastructure.repositories.account_repository.get_account_repository().get_accounts()
+    accounts = infrastructure.Repositories.account_repository().get_accounts()
     transactions = []
     for account in accounts:
         transactions.extend(account.get_transactions_for_category_between(start_date, end_date, category))
@@ -40,7 +40,7 @@ def get_transactions_for_category_between(start_date, end_date, category):
 
 def get_date_of_first_transaction():
     """Returns the date of the first transaction for all accounts."""
-    accounts = infrastructure.repositories.account_repository.get_account_repository().get_accounts()
+    accounts = infrastructure.Repositories.account_repository().get_accounts()
     first_date = datetime.date.today()
     for account in accounts:
         account_date = account.get_first_transaction_date()
@@ -51,7 +51,7 @@ def get_date_of_first_transaction():
 
 def get_date_of_last_transaction():
     """Returns the date of the last transaction for all accounts."""
-    accounts = infrastructure.repositories.account_repository.get_account_repository().get_accounts()
+    accounts = infrastructure.Repositories.account_repository().get_accounts()
     last_date = datetime.date.today()
     for account in accounts:
         account_date = account.get_last_transaction_date()

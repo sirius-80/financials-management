@@ -2,6 +2,8 @@ import csv
 import logging
 import re
 
+import pubsub.pub
+
 from domain.account_management.services import TransactionCategoryMapper
 
 logger = logging.getLogger(__name__)
@@ -58,3 +60,9 @@ def get_pattern_mapper(mapping_file, category_repository):
     if not _pattern_mapper:
         _pattern_mapper = _PatternTransactionCategoryMapper(mapping_file, category_repository)
     return _pattern_mapper
+
+
+def publish_domain_events(event_list):
+    for event in event_list:
+        topic = event.__class__.__name__
+        pubsub.pub.sendMessage(topic, event=event)

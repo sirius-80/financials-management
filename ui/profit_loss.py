@@ -80,7 +80,7 @@ def set_granularity(granularity):
 
 def get_profit_loss_data(granularity):
     date_list = application.services.get_transaction_date_range(day_nr=1)
-    category_repository = infrastructure.repositories.category_repository.get_category_repository()
+    category_repository = infrastructure.Repositories.category_repository()
     transactions_per_month = [
         application.services.get_transactions_between(month, month + dateutil.relativedelta.relativedelta(months=1))
         for month in date_list]

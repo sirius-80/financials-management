@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 
 
 def export_native_data(account_file, transaction_file, category_file):
-    account_repository = infrastructure.repositories.account_repository.get_account_repository()
-    category_repository = infrastructure.repositories.category_repository.get_category_repository()
+    account_repository = infrastructure.Repositories.account_repository()
+    category_repository = infrastructure.Repositories.category_repository()
 
     application.services.data_export.native.export_categories(category_repository.get_categories(), category_file)
     application.services.data_export.native.export_accounts(account_repository.get_accounts(), account_file,
@@ -27,10 +27,10 @@ def export_native_data(account_file, transaction_file, category_file):
 
 
 def import_native_data(account_file, transaction_file, category_file):
-    account_repository = infrastructure.repositories.account_repository.get_account_repository()
-    account_factory = infrastructure.repositories.account_repository.get_account_factory()
-    category_repository = infrastructure.repositories.category_repository.get_category_repository()
-    category_factory = infrastructure.repositories.category_repository.get_category_factory()
+    account_repository = infrastructure.Repositories.account_repository()
+    account_factory = infrastructure.Factories.account_factory()
+    category_repository = infrastructure.Repositories.category_repository()
+    category_factory = infrastructure.Factories.category_factory()
 
     application.services.data_import.native.import_categories(category_file, category_repository, category_factory)
     application.services.data_import.native.import_accounts(account_file, account_repository, account_factory)
@@ -157,20 +157,20 @@ def on_transaction_categorized_event(event):
 def on_transaction_created_event(event):
     logger.debug("Categorizing new transaction: %s", event.transaction)
     pattern_transaction_mapper = infrastructure.services.get_pattern_mapper("mapping.csv",
-                                                                            infrastructure.repositories.category_repository.get_category_repository())
+                                                                            infrastructure.Repositories.category_repository())
     afas_transaction_mapper = infrastructure.services.afas.get_afas_mapper("AFAS2.csv",
-                                                                           infrastructure.repositories.category_repository.get_category_repository())
+                                                                           infrastructure.Repositories.category_repository())
     cleanup_transaction_mapper = CategoryCleanupTransactionMapper(
-        infrastructure.repositories.category_repository.get_category_repository())
+        infrastructure.Repositories.category_repository())
     internal_transactions_mapper = InternalTransactionsMapper()
     map_transaction(event.transaction, pattern_transaction_mapper,
-                    infrastructure.repositories.account_repository.get_account_repository())
+                    infrastructure.Repositories.account_repository())
     map_transaction(event.transaction, afas_transaction_mapper,
-                    infrastructure.repositories.account_repository.get_account_repository())
+                    infrastructure.Repositories.account_repository())
     map_transaction(event.transaction, cleanup_transaction_mapper,
-                    infrastructure.repositories.account_repository.get_account_repository())
+                    infrastructure.Repositories.account_repository())
     map_transaction(event.transaction, internal_transactions_mapper,
-                    infrastructure.repositories.account_repository.get_account_repository())
+                    infrastructure.Repositories.account_repository())
 
 
 def log_current_account_info(account_repository):
@@ -184,5 +184,5 @@ def log_current_account_info(account_repository):
 def initialize_application():
     pubsub.pub.subscribe(on_transaction_categorized_event, "TransactionCategorizedEvent")
     pubsub.pub.subscribe(on_transaction_created_event, "TransactionCreatedEvent")
-    generate_categories(infrastructure.repositories.category_repository.get_category_factory(),
-                        infrastructure.repositories.category_repository.get_category_repository())
+    generate_categories(infrastructure.Factories.category_factory(),
+                        infrastructure.Repositories.category_repository())

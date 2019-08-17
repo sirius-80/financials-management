@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 
 def get_category_plot(figure_manager):
     date_list = application.services.get_transaction_date_range()
-    category_repository = infrastructure.repositories.category_repository.get_category_repository()
-    account_repository = infrastructure.repositories.account_repository.get_account_repository()
+    category_repository = infrastructure.Repositories.category_repository()
+    account_repository = infrastructure.Repositories.account_repository()
     category = None
     amounts = [application.services.get_combined_amount_for_category_in_month(category, month) for month in date_list]
     settings = {'category': category,

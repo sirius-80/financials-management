@@ -55,7 +55,7 @@ def main():
         infrastructure.repositories.get_database().connection.commit()
         return
 
-    account_repository = infrastructure.repositories.account_repository.get_account_repository()
+    account_repository = infrastructure.Repositories.account_repository()
     application.log_current_account_info(account_repository)
 
     ui.plot_data_with_bokeh()

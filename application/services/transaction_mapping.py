@@ -1,5 +1,4 @@
 from domain.account_management.services import TransactionCategoryMapper
-import infrastructure.repositories.account_repository
 import infrastructure.repositories.category_repository
 
 
@@ -42,8 +41,8 @@ class CategoryCleanupTransactionMapper(TransactionCategoryMapper):
 class InternalTransactionsMapper(TransactionCategoryMapper):
     """Maps transactions between own accounts to the 'Overboekingen' category."""
     DEFAULT_SCORE = 100
-    account_repository = infrastructure.repositories.account_repository.get_account_repository()
-    internal_transactions_category = infrastructure.repositories.category_repository.get_category_repository().get_category_by_qualified_name(
+    account_repository = infrastructure.Repositories.account_repository()
+    internal_transactions_category = infrastructure.Repositories.category_repository().get_category_by_qualified_name(
         "Overboekingen")
 
     def get_category_scores(self, transaction):

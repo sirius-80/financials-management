@@ -1,8 +1,8 @@
 import logging
 
-from domain.account_management.model.account import AccountRepository, Account, Transaction, AccountFactory
-from infrastructure import publish_domain_events
-from infrastructure.repositories import get_database, category_repository
+import infrastructure
+from domain.account_management.model.account import AccountRepository, Account, Transaction
+from infrastructure.services import publish_domain_events
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ class _AccountCache(AccountRepository):
 
             logger.debug("Fetching transactions for account %s", account)
             for trow in self.db.query("SELECT * FROM transactions WHERE account = ?", (account.id,)):
-                category = category_repository.get_category_repository().get_category(trow["category"])
+                category = infrastructure.Repositories.category_repository().get_category(trow["category"])
                 transaction = Transaction(trow["id"], account, trow["serial"], trow["date"],
                                           trow["amount"], trow["name"], trow["description"], trow["counter_account"],
                                           trow["balance_after"], category)
@@ -79,6 +79,7 @@ class _AccountRepository(AccountRepository):
         self.db = db
         self._cache = cache
         self._create_tables()
+        self._cache.init_cache()
 
     def save_account(self, account):
         cursor = self.db.connection.cursor()
@@ -201,17 +202,3 @@ class _AccountRepository(AccountRepository):
         cursor.execute(sql_create_accounts_table)
         cursor.execute(sql_create_transactions_table)
         self.db.connection.commit()
-
-
-_account_cache = _AccountCache(get_database())
-_account_repository = _AccountRepository(get_database(), _account_cache)
-_account_cache.init_cache()
-_account_factory = AccountFactory()
-
-
-def get_account_repository():
-    return _account_repository
-
-
-def get_account_factory():
-    return _account_factory

@@ -1,8 +1,7 @@
 import logging
 import sqlite3
 
-from domain.account_management.model.category import CategoryRepository, CategoryFactory, Category
-from infrastructure.repositories import get_database
+from domain.account_management.model.category import CategoryRepository, Category
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +74,7 @@ class _CategoryRepository(CategoryRepository):
         self.db = db
         self._cache = cache
         self._create_tables()
+        self._cache.init_cache()
 
     def get_category_by_qualified_name(self, qualified_name):
         if self._cache:
@@ -149,17 +149,3 @@ class _CategoryRepository(CategoryRepository):
                                             );"""
         self.db.connection.cursor().execute(sql_create_categories_table)
         self.db.connection.commit()
-
-
-_category_cache = _CategoryCache(get_database())
-_category_repository = _CategoryRepository(get_database(), _category_cache)
-_category_cache.init_cache()
-_category_factory = CategoryFactory(_category_repository)
-
-
-def get_category_repository():
-    return _category_repository
-
-
-def get_category_factory():
-    return _category_factory

@@ -47,8 +47,8 @@ def import_transactions_from_rabobank_csv(filename, bank):
             # mapping.map_transaction(transaction)
 
 
-account_repository = infrastructure.repositories.account_repository.get_account_repository()
-account_factory = infrastructure.repositories.account_repository.get_account_factory()
+account_repository = infrastructure.Repositories.account_repository()
+account_factory = infrastructure.Factories.account_factory()
 logger = logging.getLogger(__name__)
 
 
