@@ -1,6 +1,9 @@
 import datetime
+import logging
 
 import infrastructure.repositories.account_repository
+
+logger = logging.getLogger(__name__)
 
 
 def get_combined_balance_at(date):
@@ -71,7 +74,7 @@ def get_transaction_date_range(start_date=None, end_date=None, day_nr=20):
             d = datetime.datetime(year, month, day_nr).date()
             dates.append(d)
             if d > end_date:
-                print("Stopping at date %s" % d)
+                logger.debug("Stopping at date %s", d)
                 break
 
     return dates

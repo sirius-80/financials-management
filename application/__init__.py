@@ -4,6 +4,8 @@ import logging
 import pubsub.pub
 
 import application.services.data_import.rabobank
+import application.services.data_import.native
+import application.services.data_export.native
 import infrastructure.repositories.account_repository
 import infrastructure.repositories.category_repository
 import infrastructure.services
@@ -13,6 +15,27 @@ from application.services.transaction_mapping import CategoryCleanupTransactionM
 
 RABOBANK = "Rabobank"
 logger = logging.getLogger(__name__)
+
+
+def export_native_data(account_file, transaction_file, category_file):
+    account_repository = infrastructure.repositories.account_repository.get_account_repository()
+    category_repository = infrastructure.repositories.category_repository.get_category_repository()
+
+    application.services.data_export.native.export_categories(category_repository.get_categories(), category_file)
+    application.services.data_export.native.export_accounts(account_repository.get_accounts(), account_file,
+                                                            transaction_file)
+
+
+def import_native_data(account_file, transaction_file, category_file):
+    account_repository = infrastructure.repositories.account_repository.get_account_repository()
+    account_factory = infrastructure.repositories.account_repository.get_account_factory()
+    category_repository = infrastructure.repositories.category_repository.get_category_repository()
+    category_factory = infrastructure.repositories.category_repository.get_category_factory()
+
+    application.services.data_import.native.import_categories(category_file, category_repository, category_factory)
+    application.services.data_import.native.import_accounts(account_file, account_repository, account_factory)
+    application.services.data_import.native.import_transactions(transaction_file, account_repository, account_factory,
+                                                                category_repository, category_factory)
 
 
 def import_rabobank_transactions(filename_list):
@@ -163,4 +186,3 @@ def initialize_application():
     pubsub.pub.subscribe(on_transaction_created_event, "TransactionCreatedEvent")
     generate_categories(infrastructure.repositories.category_repository.get_category_factory(),
                         infrastructure.repositories.category_repository.get_category_repository())
-    infrastructure.repositories.account_repository.enable_cache()

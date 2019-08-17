@@ -1,14 +1,17 @@
 import csv
 
 import datetime
+import logging
 
 from domain.account_management.services import TransactionCategoryMapper
+
+logger = logging.getLogger(__name__)
 
 
 def parse_csv(filename, category_repo):
     """Parses all csv-files into the list."""
     export = AfasExport()
-    print("Reading ", filename)
+    logger.info("Reading AFAS export from ", filename)
     with open(filename, encoding="ISO-8859-1") as csv_file:
         reader = csv.DictReader(csv_file, delimiter=';')
 
@@ -36,7 +39,7 @@ def parse_csv(filename, category_repo):
                     try:
                         category = category_repo.get_category_by_qualified_name(cat + "::" + sub_category)
                     except:
-                        print("Failed to get category for %s::%s" % (cat, sub_category))
+                        logger.warning("Failed to get category for %s::%s", cat, sub_category)
                         raise
 
                 if category:
@@ -44,7 +47,7 @@ def parse_csv(filename, category_repo):
                                                   counter_account_id, category)
                     export.add_transaction(transaction)
             except:
-                print("Failed to read row", row)
+                logger.error("Failed to read row %s", row)
                 raise
     return export
 

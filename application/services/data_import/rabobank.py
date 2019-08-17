@@ -53,6 +53,8 @@ logger = logging.getLogger(__name__)
 
 
 def _get_or_create_account(account_name, bank):
+    """Searches the repository for an account with given name and bank and returns it if found.
+    Otherwise returns a new account object."""
     account = account_repository.get_account_by_name_and_bank(account_name, bank)
     if not account:
         account = account_factory.create_account(account_name, bank)

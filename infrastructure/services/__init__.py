@@ -1,14 +1,17 @@
 import csv
+import logging
 import re
 
 from domain.account_management.services import TransactionCategoryMapper
+
+logger = logging.getLogger(__name__)
 
 
 class _PatternTransactionCategoryMapper(TransactionCategoryMapper):
     def __init__(self, mapping_filename, category_repository):
         self.category_repository = category_repository
         self.names = {}
-        print("Reading mapping from", mapping_filename)
+        logger.info("Reading mapping from %s", mapping_filename)
         with open(mapping_filename, encoding="ISO-8859-1") as csv_file:
             reader = csv.DictReader(csv_file, delimiter=',')
             for row in reader:
@@ -18,7 +21,7 @@ class _PatternTransactionCategoryMapper(TransactionCategoryMapper):
                 try:
                     category = self.category_repository.get_category_by_qualified_name(cat_name)
                 except:
-                    print("Failed to get category for", cat_name)
+                    logger.warning("Failed to get category for %s", cat_name)
                     raise
                 self.names[(name, description)] = category
 

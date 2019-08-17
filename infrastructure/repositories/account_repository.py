@@ -24,7 +24,7 @@ class _AccountCache(AccountRepository):
             self.transactions[transaction.id] = transaction
         assert self.transactions[transaction.id] is transaction
 
-        stored_account = self.get_account_by_id(transaction.account.id)
+        stored_account = self.get_account(transaction.account.id)
         stored_account.transactions = [transaction if transaction.id == t.id else t
                                        for t in stored_account.transactions]
 
@@ -38,13 +38,13 @@ class _AccountCache(AccountRepository):
         # logger.debug("Got from cache: %s", cached)
         return cached
 
-    def get_account_by_id(self, account_id):
+    def get_account(self, account_id):
         if account_id in self.accounts.keys():
             return self.accounts[account_id]
         else:
             return None
 
-    def get_transaction_by_id(self, transaction_id):
+    def get_transaction(self, transaction_id):
         if transaction_id in self.transactions.keys():
             return self.transactions[transaction_id]
         else:
@@ -82,7 +82,7 @@ class _AccountRepository(AccountRepository):
 
     def save_account(self, account):
         cursor = self.db.connection.cursor()
-        if self.get_account_by_id(account.id):
+        if self.get_account(account.id):
             cursor.execute("UPDATE accounts SET name=?, bank=? WHERE id=?",
                            (account.name, account.bank, account.id))
         else:
@@ -94,7 +94,7 @@ class _AccountRepository(AccountRepository):
 
     def save_transaction(self, transaction):
         cursor = self.db.connection.cursor()
-        if self.get_transaction_by_id(transaction.id):
+        if self.get_transaction(transaction.id):
             cursor.execute(
                 "UPDATE transactions SET amount=?, date=?, name=?, description=?, balance_after=?, "
                 "serial=?, counter_account=?, account=?, category=? "
@@ -129,9 +129,9 @@ class _AccountRepository(AccountRepository):
                 accounts.append(self._collect_transactions(account))
             return accounts
 
-    def get_account_by_id(self, account_id):
+    def get_account(self, account_id):
         if self._cache:
-            return self._cache.get_account_by_id(account_id)
+            return self._cache.get_account(account_id)
         else:
             row = self.db.query_one("SELECT * FROM accounts WHERE id=?", (account_id,))
             if row:
@@ -142,9 +142,9 @@ class _AccountRepository(AccountRepository):
             else:
                 return None
 
-    def get_transaction_by_id(self, transaction_id):
+    def get_transaction(self, transaction_id):
         if self._cache:
-            transaction = self._cache.get_transaction_by_id(transaction_id)
+            transaction = self._cache.get_transaction(transaction_id)
             return transaction
         else:
             row = self.db.query_one("SELECT * FROM transactions WHERE id=?", (transaction_id,))
@@ -203,19 +203,10 @@ class _AccountRepository(AccountRepository):
         self.db.connection.commit()
 
 
-_account_cache = None
+_account_cache = _AccountCache(get_database())
 _account_repository = _AccountRepository(get_database(), _account_cache)
+_account_cache.init_cache()
 _account_factory = AccountFactory()
-
-
-def enable_cache(enabled=True):
-    global _account_cache
-    if enabled:
-        _account_cache = _AccountCache(get_database())
-        _account_cache.init_cache()
-    else:
-        _account_cache = None
-    _account_repository._cache = _account_cache
 
 
 def get_account_repository():

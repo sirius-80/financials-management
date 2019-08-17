@@ -152,8 +152,8 @@ class _CategoryRepository(CategoryRepository):
 
 
 _category_cache = _CategoryCache(get_database())
-_category_cache.init_cache()
 _category_repository = _CategoryRepository(get_database(), _category_cache)
+_category_cache.init_cache()
 _category_factory = CategoryFactory(_category_repository)
 
 
