@@ -21,3 +21,7 @@ class TransactionCategoryMapper:
     def get_category_scores(self, transaction):
         raise NotImplementedError
 
+
+class InternalTransactionDetector:
+    def is_internal_transaction(self, transaction):
+        raise NotImplementedError

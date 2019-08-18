@@ -5,7 +5,7 @@ import dateutil
 from bokeh.events import Tap, PanEnd, Reset
 from bokeh.layouts import column, row
 from bokeh.models import ColumnDataSource, HoverTool, TapTool, TableColumn, DateFormatter, NumberFormatter, \
-    SelectEditor, DataTable, Select, WidgetBox, NumeralTickFormatter, Title
+    SelectEditor, DataTable, Select, WidgetBox, NumeralTickFormatter, Title, CheckboxEditor
 from bokeh.plotting import figure
 
 import application.services
@@ -54,7 +54,8 @@ def get_category_plot(figure_manager):
         TableColumn(field="category", title="Category",
                     editor=SelectEditor(options=["None"] + [str(c) for c in category_repository.get_categories()])),
         TableColumn(field="description", title="Description", width=800),
-        TableColumn(field="counter_account", title="Counter account", width=200)
+        TableColumn(field="counter_account", title="Counter account", width=200),
+        TableColumn(field="internal", title="Internal", editor=CheckboxEditor(), width=50)
     ]
     transaction_data = dict(
         date=[],
@@ -63,7 +64,8 @@ def get_category_plot(figure_manager):
         category=[],
         name=[],
         description=[],
-        counter_account=[]
+        counter_account=[],
+        internal=[]
     )
     transaction_source = ColumnDataSource(transaction_data)
     transactions_table = DataTable(source=transaction_source, columns=columns, fit_columns=True, editable=True,
@@ -98,7 +100,8 @@ def get_category_plot(figure_manager):
             category=[],
             name=[],
             descr=[],
-            counter_account=[]
+            counter_account=[],
+            internal=[]
         )
         settings['transactions'] = []
         transaction_source.data = data
@@ -125,6 +128,7 @@ def get_category_plot(figure_manager):
         data['category'] = [str(t.category) for t in selected_transactions]
         data['description'] = [t.description for t in selected_transactions]
         data['counter_account'] = [t.counter_account for t in selected_transactions]
+        data['internal'] = [t.internal for t in selected_transactions]
         transaction_source.data = data
 
     fig.on_event(Tap, on_selection_event)

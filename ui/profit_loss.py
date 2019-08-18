@@ -83,14 +83,13 @@ def get_profit_loss_data(granularity):
     transactions_per_month = [
         application.services.get_transactions_between(month, month + dateutil.relativedelta.relativedelta(months=1))
         for month in date_list]
-    internal_transaction_category = category_repository.get_category_by_qualified_name("Overboekingen")
     income = []
     expenses = []
     for transaction_list in transactions_per_month:
         income.append(
-            sum([t.amount for t in transaction_list if t.amount > 0 and t.category != internal_transaction_category]))
+            sum([t.amount for t in transaction_list if t.amount > 0 and not t.internal]))
         expenses.append(
-            sum([t.amount for t in transaction_list if t.amount < 0 and t.category != internal_transaction_category]))
+            sum([t.amount for t in transaction_list if t.amount < 0 and not t.internal]))
 
     if granularity == ui.FigureManager.TimeUnit.YEAR:
         # Convert to year-data

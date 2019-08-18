@@ -15,6 +15,8 @@ def _convert_to_decimal(s):
 
 sqlite3.register_adapter(decimal.Decimal, _adapt_from_decimal)
 sqlite3.register_converter("decimal", _convert_to_decimal)
+sqlite3.register_adapter(bool, int)
+sqlite3.register_converter("boolean", lambda v: bool(int(v)))
 
 
 class DatabaseSqlite3:

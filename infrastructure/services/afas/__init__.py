@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 def parse_csv(filename, category_repo):
     """Parses all csv-files into the list."""
     export = AfasExport()
-    logger.info("Reading AFAS export from ", filename)
+    logger.info("Reading AFAS export from %s", filename)
     with open(filename, encoding="ISO-8859-1") as csv_file:
         reader = csv.DictReader(csv_file, delimiter=';')
 

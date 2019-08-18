@@ -103,6 +103,16 @@ class TransactionCategorizedEvent(DomainEvent):
         return "TransactionCategorizedEvent %s: %s => %s" % (self.transaction, self.old_category, self.new_category)
 
 
+class TransactionSetInternalEvent(DomainEvent):
+    def __init__(self, transaction, old_internal_flag, new_internal_flag):
+        self.transaction = transaction
+        self.old_internal = old_internal_flag
+        self.new_internal = new_internal_flag
+
+    def __repr__(self):
+        return "TransactionInternalEvent %s: %s => %s" % (self.transaction, self.old_internal, self.new_internal)
+
+
 class AccountCreatedEvent(DomainEvent):
     def __init__(self, account):
         self.account = account
@@ -121,7 +131,7 @@ class TransactionCreatedEvent(DomainEvent):
 
 class Transaction(Entity):
     def __init__(self, transaction_id, account, serial, date, amount, name, description,
-                 counter_account, balance_after, category):
+                 counter_account, balance_after, internal=False, category=None):
         super().__init__(transaction_id)
         self.account = account
         self.serial = serial
@@ -131,11 +141,13 @@ class Transaction(Entity):
         self.description = description
         self.counter_account = counter_account
         self.balance_after = balance_after
+        self.internal = internal
         self.category = category
 
     def __repr__(self):
-        return "{c}(id={id!r}, account={account!r}, date={date!r}, amount={amount!r}," \
-               "name={name!r}, counter_account={counter!r}, description={description!r}, category={category!r})".format(
+        return "{c}(id={id!r}, account={account!r}, date={date!r}, amount={amount!r}, " \
+               "name={name!r}, counter_account={counter!r}, description={description!r}, category={category!r}, " \
+               "internal={internal!r})".format(
             c=self.__class__.__name__,
             id=self.id,
             account=self.account,
@@ -144,11 +156,16 @@ class Transaction(Entity):
             name=self.name,
             counter=self.counter_account,
             description=self.description,
-            category=self.category)
+            category=self.category,
+            internal=self.internal)
 
     def update_category(self, category):
         self.register_domain_event(TransactionCategorizedEvent(self, self.category, category))
         self.category = category
+
+    def set_internal(self, internal):
+        self.register_domain_event(TransactionSetInternalEvent(self, self.internal, internal))
+        self.internal = internal
 
 
 class AccountRepository:
@@ -185,6 +202,6 @@ class AccountFactory:
 
     def create_transaction(self, account, date, amount, name, description, serial, counter_account, balance_after):
         transaction = Transaction(uuid.uuid4().hex, account, serial, date, amount, name, description, counter_account,
-                                  balance_after, category=None)
+                                  balance_after)
         transaction.register_domain_event(TransactionCreatedEvent(transaction))
         return transaction

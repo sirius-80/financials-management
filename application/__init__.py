@@ -10,7 +10,7 @@ import infrastructure
 import infrastructure.services
 import infrastructure.services.afas
 from application.services.transaction_mapping import CategoryCleanupTransactionMapper, map_transaction, \
-    InternalTransactionsMapper
+    InternalTransactionsMapper, MyInternalTransactionDetector
 
 RABOBANK = "Rabobank"
 logger = logging.getLogger(__name__)
@@ -153,6 +153,13 @@ def on_transaction_categorized_event(event):
                  event.new_category, event.transaction)
 
 
+def flag_internal_transaction(transaction, internal_transactions_detector, account_repository):
+    if internal_transactions_detector.is_internal_transaction(transaction):
+        logger.debug("Flagging transaction as internal: %s", transaction)
+        transaction.set_internal(True)
+        account_repository.save_transaction(transaction)
+
+
 def on_transaction_created_event(event):
     logger.debug("Categorizing new transaction: %s", event.transaction)
     pattern_transaction_mapper = infrastructure.services.get_pattern_mapper("mapping.csv",
@@ -162,6 +169,7 @@ def on_transaction_created_event(event):
     cleanup_transaction_mapper = CategoryCleanupTransactionMapper(
         infrastructure.Repositories.category_repository())
     internal_transactions_mapper = InternalTransactionsMapper()
+    internal_transactions_detector = MyInternalTransactionDetector()
     map_transaction(event.transaction, pattern_transaction_mapper,
                     infrastructure.Repositories.account_repository())
     map_transaction(event.transaction, afas_transaction_mapper,
@@ -170,6 +178,8 @@ def on_transaction_created_event(event):
                     infrastructure.Repositories.account_repository())
     map_transaction(event.transaction, internal_transactions_mapper,
                     infrastructure.Repositories.account_repository())
+    flag_internal_transaction(event.transaction, internal_transactions_detector,
+                              infrastructure.Repositories.account_repository())
 
 
 def log_current_account_info(account_repository):
