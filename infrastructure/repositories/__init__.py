@@ -39,10 +39,3 @@ class DatabaseSqlite3:
         cursor.execute(sql, parameters)
         row = cursor.fetchone()
         return row
-
-
-_database = DatabaseSqlite3()
-
-
-def get_database():
-    return _database

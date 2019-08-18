@@ -3,8 +3,8 @@ import datetime
 import decimal
 import logging
 
+import infrastructure
 from domain.account_management import services
-import infrastructure.repositories.account_repository
 
 
 def import_transactions_from_rabobank_csv(filename, bank):

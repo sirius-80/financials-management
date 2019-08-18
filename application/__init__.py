@@ -3,11 +3,10 @@ import logging
 # noinspection PyPackageRequirements
 import pubsub.pub
 
-import application.services.data_import.rabobank
-import application.services.data_import.native
 import application.services.data_export.native
-import infrastructure.repositories.account_repository
-import infrastructure.repositories.category_repository
+import application.services.data_import.native
+import application.services.data_import.rabobank
+import infrastructure
 import infrastructure.services
 import infrastructure.services.afas
 from application.services.transaction_mapping import CategoryCleanupTransactionMapper, map_transaction, \
@@ -146,7 +145,7 @@ def generate_categories(category_factory, category_repository):
     generate_category(category_repository, category_factory, "Uitgaven::Niet gecategoriseerd::Nog in te delen")
 
     generate_category(category_repository, category_factory, "Overboekingen")
-    infrastructure.repositories.get_database().connection.commit()
+    infrastructure.Database.database().connection.commit()
 
 
 def on_transaction_categorized_event(event):

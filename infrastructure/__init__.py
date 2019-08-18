@@ -1,8 +1,9 @@
-import infrastructure.repositories.account_repository
-import infrastructure.repositories.category_repository
+from dependency_injector import containers, providers
+
 import domain.account_management.model.account
 import domain.account_management.model.category
-from dependency_injector import containers, providers
+import infrastructure.repositories.account_repository
+import infrastructure.repositories.category_repository
 
 
 class Database(containers.DeclarativeContainer):

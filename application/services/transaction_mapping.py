@@ -1,5 +1,5 @@
+import infrastructure
 from domain.account_management.services import TransactionCategoryMapper
-import infrastructure.repositories.category_repository
 
 
 class CategoryCleanupTransactionMapper(TransactionCategoryMapper):

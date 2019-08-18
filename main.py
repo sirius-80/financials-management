@@ -3,9 +3,8 @@
 import argparse
 import logging
 
-import infrastructure.repositories.category_repository
-import infrastructure.repositories.account_repository
 import application
+import infrastructure
 import ui
 
 
@@ -36,7 +35,7 @@ def main():
         transaction_file = "transactions.csv"
         logger.info("Importing native csv-files: %s, %s and %s", account_file, category_file, transaction_file)
         application.import_native_data(account_file, transaction_file, category_file)
-        infrastructure.repositories.get_database().connection.commit()
+        infrastructure.Database.database().connection.commit()
         return
 
     if args.export_data:
@@ -52,7 +51,7 @@ def main():
     if args.import_rabobank_csv:
         logger.info("Importing rabobank csv-file: %s", args.import_rabobank_csv)
         application.import_rabobank_transactions([args.import_rabobank_csv])
-        infrastructure.repositories.get_database().connection.commit()
+        infrastructure.Database.database().connection.commit()
         return
 
     account_repository = infrastructure.Repositories.account_repository()

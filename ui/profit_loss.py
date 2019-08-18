@@ -6,8 +6,7 @@ from bokeh.models import ColumnDataSource, HoverTool, NumeralTickFormatter, Titl
 from bokeh.plotting import figure
 
 import application.services
-import infrastructure.repositories.account_repository
-import infrastructure.repositories.category_repository
+import infrastructure
 import ui
 
 MS_IN_24_DAYS = 24 * 24 * 60 * 60 * 1000

@@ -9,8 +9,7 @@ from bokeh.models import ColumnDataSource, HoverTool, TapTool, TableColumn, Date
 from bokeh.plotting import figure
 
 import application.services
-import infrastructure.repositories.account_repository
-import infrastructure.repositories.category_repository
+import infrastructure
 import ui
 
 logger = logging.getLogger(__name__)
@@ -81,7 +80,7 @@ def get_category_plot(figure_manager):
                     logger.info("Updating transaction category %s => %s", transaction, new_category)
                     transaction.update_category(new_category)
                     account_repository.save_transaction(transaction)
-                    infrastructure.repositories.get_database().connection.commit()
+                    infrastructure.Database.database().connection.commit()
 
     transactions_table.source.on_change('data', on_update_category)
 

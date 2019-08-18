@@ -1,7 +1,7 @@
 import datetime
 import logging
 
-import infrastructure.repositories.account_repository
+import infrastructure
 
 logger = logging.getLogger(__name__)
 
