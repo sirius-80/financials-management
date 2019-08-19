@@ -1,5 +1,10 @@
 import datetime
 import logging
+import os
+
+from dependency_injector import containers, providers
+import application.services.transaction_mapping
+import application.services.afas
 
 import infrastructure
 
@@ -78,3 +83,28 @@ def get_transaction_date_range(start_date=None, end_date=None, day_nr=20):
                 break
 
     return dates
+
+
+class Configuration:
+    def __init__(self):
+        self.data_directory = os.environ.get("DATA_DIRECTORY", "data")
+
+    def get_file(self, filename):
+        return os.path.join(self.data_directory, filename)
+
+
+class Configurations(containers.DeclarativeContainer):
+    config = providers.Factory(Configuration)
+
+
+class Container(containers.DeclarativeContainer):
+    afas_mapper = providers.Singleton(afas._AfasTransactionCategoryMapper,
+                                      category_repository=infrastructure.Repositories.category_repository,
+                                      config=Configurations.config)
+    cleanup_mapper = providers.Singleton(transaction_mapping.CategoryCleanupTransactionMapper,
+                                         category_repository=infrastructure.Repositories.category_repository)
+    internal_transactions_mapper = providers.Singleton(
+        transaction_mapping.InternalTransactionsMapper)
+    pattern_mapper = providers.Singleton(transaction_mapping._PatternTransactionCategoryMapper,
+                                         category_repository=infrastructure.Repositories.category_repository,
+                                         config=Configurations.config)

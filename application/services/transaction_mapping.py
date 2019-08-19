@@ -1,7 +1,9 @@
+import csv
 import re
 
 import infrastructure
 from domain.account_management.services import TransactionCategoryMapper, InternalTransactionDetector
+from infrastructure.services import logger
 
 
 class CategoryCleanupTransactionMapper(TransactionCategoryMapper):
@@ -101,3 +103,47 @@ def map_transaction(transaction, transaction_mapper, account_repository, update=
         if (update or not transaction.category) and transaction.category != category:
             transaction.update_category(category)
             account_repository.save_transaction(transaction)
+
+
+class _PatternTransactionCategoryMapper(TransactionCategoryMapper):
+    def __init__(self, category_repository, config):
+        self.category_repository = category_repository
+        self.names = {}
+        mapping_filename = config.get_file("mapping.csv")
+        logger.info("Reading mapping from %s", mapping_filename)
+        with open(mapping_filename, encoding="ISO-8859-1") as csv_file:
+            reader = csv.DictReader(csv_file, delimiter=',')
+            for row in reader:
+                name = row["Name"]
+                description = row["Description"]
+                cat_name = row["Category"]
+                try:
+                    category = self.category_repository.get_category_by_qualified_name(cat_name)
+                except:
+                    logger.warning("Failed to get category for %s", cat_name)
+                    raise
+                self.names[(name, description)] = category
+
+    @staticmethod
+    def match_value(name, description):
+        """Returns a numerical value for a match, that can be used to compare the quality of the matches."""
+        value = 0
+        if name:
+            value += 100 + len(name)
+        if description:
+            value += 100 + len(description)
+        return value
+
+    def get_category_scores(self, transaction):
+        matches = []
+        for name, description in self.names.keys():
+            name_pattern = ".*%s.*" % name.lower()
+            description_pattern = ".*%s.*" % description.lower()
+            if re.match(name_pattern, transaction.name.lower()) and re.match(description_pattern,
+                                                                             transaction.description.lower()):
+                category = self.names[(name, description)]
+                score = self.match_value(name, description)
+                category_score = TransactionCategoryMapper.CategoryScore(category, score)
+                matches.append(category_score)
+
+        return sorted(matches, key=lambda cs: cs.score, reverse=True)
