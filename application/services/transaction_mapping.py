@@ -1,9 +1,11 @@
 import csv
 import re
+import logging
 
 import infrastructure
 from domain.account_management.services import TransactionCategoryMapper, InternalTransactionDetector
-from infrastructure.services import logger
+
+logger = logging.getLogger(__name__)
 
 
 class CategoryCleanupTransactionMapper(TransactionCategoryMapper):
