@@ -1,7 +1,6 @@
 import logging
 from enum import Enum
 
-from bokeh.io import curdoc
 from bokeh.layouts import column
 
 import application.services
@@ -16,13 +15,13 @@ def get_balances(date_list):
     return [application.services.get_combined_balance_at(date) for date in date_list]
 
 
-def plot_data_with_bokeh():
+def plot_data_with_bokeh(doc):
     figure_manager = FigureManager()
     balance_plot = get_balance_plot(figure_manager)
     profit_loss_plot = get_profit_loss_plot(figure_manager)
     amount_per_category_plot = get_category_plot(figure_manager)
 
-    curdoc().add_root(column(balance_plot, profit_loss_plot, amount_per_category_plot, sizing_mode='stretch_width'))
+    doc.add_root(column(balance_plot, profit_loss_plot, amount_per_category_plot, sizing_mode='stretch_width'))
 
 
 class FigureManager:

@@ -65,7 +65,7 @@ def get_date_of_last_transaction():
     return last_date
 
 
-def get_transaction_date_range(start_date=None, end_date=None, day_nr=20):
+def get_transaction_date_range(start_date=None, end_date=None, day_nr=1):
     """Returns a list of monthly dates starting at january 1st in the year of start_date, until the month in
     given last_date."""
     if not start_date:
