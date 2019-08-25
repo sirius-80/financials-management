@@ -21,10 +21,10 @@ def get_balance_plot(figure_manager):
         },
         mode='vline'
     )
-    data = get_balance_data()
+    data = get_balance_data(figure_manager.first_date_of_month)
     source = ColumnDataSource(data=data)
     fig = figure(sizing_mode='stretch_width', plot_height=300, x_axis_type="datetime",
-                 tools=[hover, "tap", "box_zoom", "wheel_zoom", "reset", "pan"])
+                 tools=[hover, "tap", "box_zoom", "wheel_zoom", "reset", "pan"], name='balance')
     fig.yaxis.formatter = NumeralTickFormatter(format="0,0")
 
     balance_plot = fig.line(x='date', y='balance', source=source, line_width=5, color="navy", alpha=0.5)
@@ -43,16 +43,22 @@ def get_balance_plot(figure_manager):
     def on_pan(event):
         figure_manager.update_x_range(fig.x_range)
 
+    def first_date_of_month_update(granularity, first_date_of_month):
+        logger.info("Updating date range: %s", first_date_of_month)
+        data = get_balance_data(first_date_of_month)
+        source.data = data
+
     fig.on_event(PanEnd, on_pan)
     fig.on_event(Reset, on_pan)
 
     figure_manager.register_figure(fig)
+    figure_manager.register_first_date_of_month_callback(first_date_of_month_update)
 
     return fig
 
 
-def get_balance_data():
-    date_list = application.services.get_transaction_date_range()
+def get_balance_data(first_date_of_month):
+    date_list = application.services.get_transaction_date_range(day_nr=first_date_of_month)
     balances = ui.get_balances(date_list)
 
     return {'date': date_list, 'balance': balances}

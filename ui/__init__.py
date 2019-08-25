@@ -16,13 +16,13 @@ def get_balances(date_list):
     return [application.services.get_combined_balance_at(date) for date in date_list]
 
 
-def plot_data_with_bokeh():
+def plot_data_with_bokeh(doc):
     figure_manager = FigureManager()
     balance_plot = get_balance_plot(figure_manager)
     profit_loss_plot = get_profit_loss_plot(figure_manager)
     amount_per_category_plot = get_category_plot(figure_manager)
 
-    curdoc().add_root(column(balance_plot, profit_loss_plot, amount_per_category_plot, sizing_mode='stretch_width'))
+    doc.add_root(column(balance_plot, profit_loss_plot, amount_per_category_plot, sizing_mode='stretch_width'))
 
 
 class FigureManager:
@@ -35,12 +35,22 @@ class FigureManager:
         self.figures = []
         self.granularity = self.TimeUnit.MONTH
         self.granularity_callbacks = []
+        self.first_date_of_month = 1
+        self.first_date_of_month_callbacks = []
 
     def set_granularity(self, granularity):
         self.granularity = granularity
         for cb in self.granularity_callbacks:
             try:
-                cb(granularity)
+                cb(granularity, self.first_date_of_month)
+            except:
+                pass
+
+    def set_first_date_of_month(self, start_day):
+        self.first_date_of_month = start_day
+        for cb in self.first_date_of_month_callbacks:
+            try:
+                cb(self.granularity, self.first_date_of_month)
             except:
                 pass
 
@@ -58,3 +68,6 @@ class FigureManager:
 
     def register_granularity_callback(self, cb):
         self.granularity_callbacks.append(cb)
+
+    def register_first_date_of_month_callback(self, cb):
+        self.first_date_of_month_callbacks.append(cb)

@@ -35,7 +35,7 @@ def get_profit_loss_plot(figure_manager):
         names=["income"]
     )
 
-    source = ColumnDataSource(data=get_profit_loss_data(figure_manager.granularity))
+    source = ColumnDataSource(data=get_profit_loss_data(figure_manager.granularity, figure_manager.first_date_of_month))
 
     fig = figure(sizing_mode='stretch_width', plot_height=300, x_axis_type="datetime",
                  tools=[hover, "tap", "box_zoom", "wheel_zoom", "reset", "pan"])
@@ -62,13 +62,14 @@ def get_profit_loss_plot(figure_manager):
     _data['plots'] = [income_glyph, expenses_glyph, profit_glyph, loss_glyph]
     _data['source'] = source
     figure_manager.register_granularity_callback(set_granularity)
+    figure_manager.register_first_date_of_month_callback(set_granularity)
 
     return fig
 
 
-def set_granularity(granularity):
+def set_granularity(granularity, first_date_of_month):
     logger.info("Setting profit-loss granularity to: %s", granularity)
-    data = get_profit_loss_data(granularity)
+    data = get_profit_loss_data(granularity, first_date_of_month)
     _data['source'].data = data
     for plot in _data['plots']:
         if granularity == ui.FigureManager.TimeUnit.YEAR:
@@ -77,9 +78,8 @@ def set_granularity(granularity):
             plot.glyph.width = MS_IN_24_DAYS
 
 
-def get_profit_loss_data(granularity):
-    date_list = application.services.get_transaction_date_range(day_nr=1)
-    category_repository = infrastructure.Repositories.category_repository()
+def get_profit_loss_data(granularity, first_date_of_month):
+    date_list = application.services.get_transaction_date_range(day_nr=first_date_of_month)
     transactions_per_month = [
         application.services.get_transactions_between(month, month + dateutil.relativedelta.relativedelta(months=1))
         for month in date_list]

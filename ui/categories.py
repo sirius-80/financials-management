@@ -5,7 +5,7 @@ import dateutil
 from bokeh.events import Tap, PanEnd, Reset
 from bokeh.layouts import column, row
 from bokeh.models import ColumnDataSource, HoverTool, TapTool, TableColumn, DateFormatter, NumberFormatter, \
-    SelectEditor, DataTable, Select, WidgetBox, NumeralTickFormatter, Title, CheckboxEditor
+    SelectEditor, DataTable, Select, WidgetBox, NumeralTickFormatter, Title, CheckboxEditor, Slider, RangeSlider
 from bokeh.plotting import figure
 
 import application.services
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_category_plot(figure_manager):
-    date_list = application.services.get_transaction_date_range()
+    date_list = application.services.get_transaction_date_range(day_nr=figure_manager.first_date_of_month)
     category_repository = infrastructure.Repositories.category_repository()
     account_repository = infrastructure.Repositories.account_repository()
     category = None
@@ -135,7 +135,7 @@ def get_category_plot(figure_manager):
 
     def update_plot():
         data = dict()
-        data['date'] = application.services.get_transaction_date_range(day_nr=1)
+        data['date'] = application.services.get_transaction_date_range(day_nr=figure_manager.first_date_of_month)
         data['amount'] = [application.services.get_combined_amount_for_category_in_month(
             category_repository.get_category_by_qualified_name(settings['category']), month) for month in date_list]
         if settings['granularity'] == ui.FigureManager.TimeUnit.YEAR:
@@ -168,12 +168,20 @@ def get_category_plot(figure_manager):
         figure_manager.set_granularity(settings['granularity'])
         update_plot()
 
+    def update_first_date_of_month(attrname, old, new):
+        logger.debug("Callback %s: %s -> %s", attrname, str(old), str(new))
+        first_date_of_month = int(new)
+        figure_manager.set_first_date_of_month(first_date_of_month)
+        update_plot()
+
     category_selector = Select(title="Category", options=["None"] + [str(c) for c in
                                                                      category_repository.get_categories()], width=200)
     category_selector.on_change('value', update_category)
     date_range_selector = Select(title="Granularity", options=["Month", "Year"], width=200)
     date_range_selector.on_change('value', update_date_range)
-    inputs = WidgetBox(category_selector, date_range_selector)
+    date_start_selector = Slider(title="First day of month", start=1, end=28, value=1, width=200)
+    date_start_selector.on_change('value', update_first_date_of_month)
+    inputs = WidgetBox(date_start_selector, category_selector, date_range_selector)
 
     def on_pan(event):
         figure_manager.update_x_range(fig.x_range)

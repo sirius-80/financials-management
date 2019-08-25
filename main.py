@@ -3,6 +3,8 @@
 import argparse
 import logging
 
+from bokeh.io import curdoc
+
 import application
 import infrastructure
 import ui
@@ -57,7 +59,7 @@ def main():
     account_repository = infrastructure.Repositories.account_repository()
     application.log_current_account_info(account_repository)
 
-    ui.plot_data_with_bokeh()
+    ui.plot_data_with_bokeh(curdoc())
 
 
 main()
