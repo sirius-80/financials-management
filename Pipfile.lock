@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e9391a645c94d8f25029bcc25e010ab5e8ad58587edf63d842e982ec070fed91"
+            "sha256": "042f5dbedb1169b1061229276b718fd0fda2ce9230b763ad0c2e8cfbdb757237"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -39,10 +39,10 @@
         },
         "dependency-injector": {
             "hashes": [
-                "sha256:37e7a2311f066c005779d42b461d58cd00a7a52a115a7ce0605f0f7f63e73c18"
+                "sha256:be2876672468e608dfc6c06b8e167ae2a5fe1916a5e2562cd1c80102bb2a87b0"
             ],
             "index": "pypi",
-            "version": "==3.14.8"
+            "version": "==3.14.10"
         },
         "importlib-metadata": {
             "hashes": [
@@ -188,11 +188,11 @@
         },
         "pytest": {
             "hashes": [
-                "sha256:3805d095f1ea279b9870c3eeae5dddf8a81b10952c8835cd628cf1875b0ef031",
-                "sha256:abc562321c2d190dd63c2faadf70b86b7af21a553b61f0df5f5e1270717dc5a3"
+                "sha256:95b1f6db806e5b1b5b443efeb58984c24945508f93a866c1719e1a507a957d7c",
+                "sha256:c3d5020755f70c82eceda3feaf556af9a341334414a8eca521a18f463bcead88"
             ],
             "index": "pypi",
-            "version": "==5.1.0"
+            "version": "==5.1.1"
         },
         "python-dateutil": {
             "hashes": [
@@ -236,6 +236,7 @@
                 "sha256:c845db36ba616912074c5b1ee897f8e0124df269468f25e4fe21fe72f6edd7a9",
                 "sha256:c9399267c926a4e7c418baa5cbe91c7d1cf362d505a1ef898fde44a07c9dd8a5"
             ],
+            "index": "pypi",
             "version": "==6.0.3"
         },
         "wcwidth": {
@@ -247,10 +248,10 @@
         },
         "zipp": {
             "hashes": [
-                "sha256:4970c3758f4e89a7857a973b1e2a5d75bcdc47794442f2e2dd4fe8e0466e809a",
-                "sha256:8a5712cfd3bb4248015eb3b0b3c54a5f6ee3f2425963ef2a0125b8bc40aafaec"
+                "sha256:3718b1cbcd963c7d4c5511a8240812904164b7f381b647143a89d3b98f9bcd8e",
+                "sha256:f06903e9f1f43b12d371004b4ac7b06ab39a44adc747266928ae6debfa7b3335"
             ],
-            "version": "==0.5.2"
+            "version": "==0.6.0"
         }
     },
     "develop": {}
