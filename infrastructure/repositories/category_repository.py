@@ -49,6 +49,9 @@ class _CategoryCache(CategoryRepository):
                     parent = None
                 category = self.get_category(row["id"]) or Category(row["id"], row["name"], parent)
                 self.save_category(category)
+                if parent and category not in parent.children:
+                    parent.children.append(category)
+                    self.save_category(parent)
                 return category
             else:
                 return None
@@ -64,6 +67,9 @@ class _CategoryCache(CategoryRepository):
                     parent = None
                 category = self.get_category(row["id"]) or Category(row["id"], row["name"], parent)
                 self.save_category(category)
+                if parent and category not in parent.children:
+                    parent.children.append(category)
+                    self.save_category(parent)
         except sqlite3.Error as e:
             logger.warning("%s: No data from database: %s", self, e)
         # logger.info("Cache initialized...")
@@ -80,6 +86,7 @@ class _CategoryRepository(CategoryRepository):
         if self._cache:
             return self._cache.get_category_by_qualified_name(qualified_name)
         else:
+            assert False, "This should be unreachable code!"
             names = qualified_name.split("::")
             next_parent = None
             category = None
@@ -95,6 +102,7 @@ class _CategoryRepository(CategoryRepository):
             return self._cache.get_category(category_id)
         else:
             logger.debug("Retrieving category with id %s from database", category_id)
+            assert False, "This should be unreachable code!"
             row = self.db.query_one("SELECT * FROM categories WHERE id = ?", (category_id,))
             logger.debug("Got data: %s", row)
             if row["parent"]:
@@ -111,6 +119,7 @@ class _CategoryRepository(CategoryRepository):
         if self._cache:
             return self._cache.get_categories()
         else:
+            assert False, "This should be unreachable code!"
             categories = []
 
             # First construct all categories with parent id's (since the parent may not be constructed yet)
@@ -136,6 +145,8 @@ class _CategoryRepository(CategoryRepository):
             cursor.execute("INSERT INTO categories (id, name, parent) VALUES (?, ?, ?)",
                            (category.id, category.name, category.parent and category.parent.id or None))
         if category.parent and not self.get_category_by_qualified_name(category.parent.qualified_name):
+            if category not in category.parent.children:
+                category.parent.children.append(category)
             self.save_category(category.parent)
 
         self._cache.save_category(category)
