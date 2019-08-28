@@ -1,11 +1,10 @@
 import math
 import pandas
-from bokeh.events import Tap
 from bokeh.layouts import row
-from bokeh.models import ColumnDataSource, Select
+from bokeh.models import ColumnDataSource
+from bokeh.palettes import Category20c
 from bokeh.plotting import figure
 from bokeh.transform import cumsum
-from bokeh.palettes import Category20c
 
 import application.services
 import infrastructure
@@ -13,10 +12,11 @@ import infrastructure
 
 def get_pie_plot(figure_manager):
     source = ColumnDataSource(data=get_data())
-    fig = figure(title="Pie chart", toolbar_location=None, tooltips="@category: €@amount{0,0}",
+    fig = figure(title="Subcategories", toolbar_location=None, tooltips="@category: €@amount{0,0}",
                  x_range=(-0.5, 1.0))
     pie = fig.wedge(x=0, y=1, radius=0.4, start_angle=cumsum('angle', include_zero=True), end_angle=cumsum('angle'),
               line_color="white", fill_color='color', legend='category', source=source)
+    fig.legend.click_policy = "mute"
     fig.axis.axis_label = None
     fig.axis.visible = False
     fig.grid.grid_line_color = None
@@ -36,12 +36,11 @@ def get_data(parent_category=None, start_date=None, end_date=None):
     end_date = end_date or application.services.get_date_of_last_transaction()
     x = {}
     if parent_category:
-        categories = parent_category.children
+        categories = parent_category.children or [parent_category]
     else:
         category_repository = infrastructure.Repositories.category_repository()
         categories = [c for c in category_repository.get_categories() if not c.parent]
     x = {}
-    print(categories)
     for category in categories:
         x[category.qualified_name] = abs(float(sum([t.amount for t in
                                                     application.services.get_transactions_for_category_between(
@@ -50,5 +49,8 @@ def get_data(parent_category=None, start_date=None, end_date=None):
                                                         category)])))
     data = pandas.Series(x).reset_index(name='amount').rename(columns={'index': 'category'})
     data['angle'] = data['amount'] / data['amount'].sum() * 2 * math.pi
-    data['color'] = Category20c[len(x)]
+    if len(x) > 2:
+        data['color'] = Category20c[len(x)]
+    else:
+        data['color'] = "#3182bd"
     return data
