@@ -4,6 +4,7 @@ from enum import Enum
 from bokeh.layouts import column
 
 import application.services
+import dependencies
 import infrastructure
 from ui import pie
 from ui.balances import get_balance_plot
@@ -57,7 +58,7 @@ class FigureManager:
                 pass
 
     def set_category(self, category_name):
-        self.category = infrastructure.Repositories.category_repository().get_category_by_qualified_name(category_name)
+        self.category = dependencies.Repositories.category_repository().get_category_by_qualified_name(category_name)
         for cb in self.category_callbacks:
             cb(self)
 

@@ -7,6 +7,7 @@ from bokeh.plotting import figure
 from bokeh.transform import cumsum
 
 import application.services
+import dependencies
 import infrastructure
 
 
@@ -38,7 +39,7 @@ def get_data(parent_category=None, start_date=None, end_date=None):
     if parent_category:
         categories = parent_category.children or [parent_category]
     else:
-        category_repository = infrastructure.Repositories.category_repository()
+        category_repository = dependencies.Repositories.category_repository()
         categories = [c for c in category_repository.get_categories() if not c.parent]
     x = {}
     for category in categories:

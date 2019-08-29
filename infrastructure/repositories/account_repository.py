@@ -1,5 +1,6 @@
 import logging
 
+import dependencies
 import infrastructure
 from domain.account_management.model.account import AccountRepository, Account, Transaction
 from infrastructure.services import publish_domain_events
@@ -60,7 +61,7 @@ class _AccountCache(AccountRepository):
 
             logger.debug("Fetching transactions for account %s", account)
             for trow in self.db.query("SELECT * FROM transactions WHERE account = ?", (account.id,)):
-                category = infrastructure.Repositories.category_repository().get_category(trow["category"])
+                category = dependencies.Repositories.category_repository().get_category(trow["category"])
                 transaction = Transaction(trow["id"], account, trow["serial"], trow["date"],
                                           trow["amount"], trow["name"], trow["description"], trow["counter_account"],
                                           trow["balance_after"], trow["internal"], category)

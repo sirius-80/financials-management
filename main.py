@@ -6,6 +6,7 @@ import logging
 from bokeh.io import curdoc
 
 import application
+import dependencies
 import infrastructure
 import ui
 
@@ -37,7 +38,7 @@ def main():
         transaction_file = "transactions.csv"
         logger.info("Importing native csv-files: %s, %s and %s", account_file, category_file, transaction_file)
         application.import_native_data(account_file, transaction_file, category_file)
-        infrastructure.Database.database().connection.commit()
+        dependencies.Database.database().connection.commit()
         return
 
     if args.export_data:
@@ -53,10 +54,10 @@ def main():
     if args.import_rabobank_csv:
         logger.info("Importing rabobank csv-file: %s", args.import_rabobank_csv)
         application.import_rabobank_transactions([args.import_rabobank_csv])
-        infrastructure.Database.database().connection.commit()
+        dependencies.Database.database().connection.commit()
         return
 
-    account_repository = infrastructure.Repositories.account_repository()
+    account_repository = dependencies.Repositories.account_repository()
     application.log_current_account_info(account_repository)
 
     ui.plot_data_with_bokeh(curdoc())

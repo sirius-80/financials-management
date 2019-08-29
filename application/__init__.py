@@ -5,10 +5,9 @@ import pubsub.pub
 import application.services.data_export.native
 import application.services.data_import.native
 import application.services.data_import.rabobank
-import infrastructure
-import infrastructure.services
+import dependencies
 import application.services.afas
-from application.services import Configuration, Configurations
+from dependencies import Configurations
 from application.services.transaction_mapping import CategoryCleanupTransactionMapper, map_transaction, \
     InternalTransactionsMapper, MyInternalTransactionDetector
 
@@ -17,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 def export_native_data(account_file, transaction_file, category_file):
-    account_repository = infrastructure.Repositories.account_repository()
-    category_repository = infrastructure.Repositories.category_repository()
+    account_repository = dependencies.Repositories.account_repository()
+    category_repository = dependencies.Repositories.category_repository()
 
     application.services.data_export.native.export_categories(category_repository.get_categories(), category_file)
     application.services.data_export.native.export_accounts(account_repository.get_accounts(), account_file,
@@ -26,10 +25,10 @@ def export_native_data(account_file, transaction_file, category_file):
 
 
 def import_native_data(account_file, transaction_file, category_file):
-    account_repository = infrastructure.Repositories.account_repository()
-    account_factory = infrastructure.Factories.account_factory()
-    category_repository = infrastructure.Repositories.category_repository()
-    category_factory = infrastructure.Factories.category_factory()
+    account_repository = dependencies.Repositories.account_repository()
+    account_factory = dependencies.Factories.account_factory()
+    category_repository = dependencies.Repositories.category_repository()
+    category_factory = dependencies.Factories.category_factory()
 
     application.services.data_import.native.import_categories(category_file, category_repository, category_factory)
     application.services.data_import.native.import_accounts(account_file, account_repository, account_factory)
@@ -53,7 +52,7 @@ def generate_categories(categories_file, category_factory, category_repository):
             qualified_name = qualified_name.strip()
             if qualified_name:
                 generate_category(category_repository, category_factory, qualified_name)
-    infrastructure.Database.database().connection.commit()
+    dependencies.Database.database().connection.commit()
 
 
 def on_transaction_categorized_event(event):
@@ -70,23 +69,23 @@ def flag_internal_transaction(transaction, internal_transactions_detector, accou
 
 def on_transaction_created_event(event):
     logger.debug("Categorizing new transaction: %s", event.transaction)
-    pattern_transaction_mapper = application.services.Container.pattern_mapper()
-    afas_transaction_mapper = application.services.Container.afas_mapper()
-    cleanup_transaction_mapper = application.services.Container.cleanup_mapper()
-    internal_transactions_mapper = application.services.Container.internal_transactions_mapper()
+    pattern_transaction_mapper = dependencies.Container.pattern_mapper()
+    afas_transaction_mapper = dependencies.Container.afas_mapper()
+    cleanup_transaction_mapper = dependencies.Container.cleanup_mapper()
+    internal_transactions_mapper = dependencies.Container.internal_transactions_mapper()
 
     map_transaction(event.transaction, pattern_transaction_mapper,
-                    infrastructure.Repositories.account_repository())
+                    dependencies.Repositories.account_repository())
     map_transaction(event.transaction, afas_transaction_mapper,
-                    infrastructure.Repositories.account_repository())
+                    dependencies.Repositories.account_repository())
     map_transaction(event.transaction, cleanup_transaction_mapper,
-                    infrastructure.Repositories.account_repository())
+                    dependencies.Repositories.account_repository())
     map_transaction(event.transaction, internal_transactions_mapper,
-                    infrastructure.Repositories.account_repository())
+                    dependencies.Repositories.account_repository())
 
     internal_transactions_detector = MyInternalTransactionDetector()
     flag_internal_transaction(event.transaction, internal_transactions_detector,
-                              infrastructure.Repositories.account_repository())
+                              dependencies.Repositories.account_repository())
 
 
 def log_current_account_info(account_repository):
@@ -100,7 +99,7 @@ def log_current_account_info(account_repository):
 def initialize_application():
     pubsub.pub.subscribe(on_transaction_categorized_event, "TransactionCategorizedEvent")
     pubsub.pub.subscribe(on_transaction_created_event, "TransactionCreatedEvent")
-    if not infrastructure.Repositories.category_repository().get_categories():
+    if not dependencies.Repositories.category_repository().get_categories():
         generate_categories(Configurations.config().get_file("categories.txt"),
-                            infrastructure.Factories.category_factory(),
-                            infrastructure.Repositories.category_repository())
+                            dependencies.Factories.category_factory(),
+                            dependencies.Repositories.category_repository())
