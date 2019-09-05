@@ -2,10 +2,6 @@ import decimal
 import logging
 import sqlite3
 
-from dependency_injector import providers
-
-import dependencies
-
 logger = logging.getLogger(__name__)
 
 
@@ -47,4 +43,4 @@ class DatabaseSqlite3:
         return row
 
 
-dependencies.Database.database = providers.Singleton(DatabaseSqlite3)
+# dependencies.Database.database = providers.Singleton(DatabaseSqlite3)

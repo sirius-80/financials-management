@@ -1,9 +1,6 @@
 import logging
 import sqlite3
 
-from dependency_injector import providers
-
-import dependencies
 from domain.account_management.model.category import CategoryRepository, Category
 
 logger = logging.getLogger(__name__)
@@ -165,7 +162,7 @@ class _CategoryRepository(CategoryRepository):
         self.db.connection.commit()
 
 
-dependencies.Caches.category_cache = providers.Singleton(_CategoryCache, db=dependencies.Database.database)
-dependencies.Repositories.category_repository = providers.Singleton(_CategoryRepository,
-                                                                    db=dependencies.Database.database,
-                                                                    cache=dependencies.Caches.category_cache)
+# dependencies.Caches.category_cache = providers.Singleton(_CategoryCache, db=dependencies.Database.database)
+# dependencies.Repositories.category_repository = providers.Singleton(_CategoryRepository,
+#                                                                     db=dependencies.Database.database,
+#                                                                     cache=dependencies.Caches.category_cache)

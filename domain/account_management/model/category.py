@@ -1,8 +1,5 @@
 import uuid
 
-from dependency_injector import providers
-
-import dependencies
 from domain.account_management.model import Entity
 
 
@@ -75,5 +72,5 @@ class CategoryFactory:
         return category
 
 
-dependencies.Factories.category_factory = providers.Factory(CategoryFactory,
-                                                            category_repository=dependencies.Repositories.category_repository)
+# dependencies.Factories.category_factory = providers.Factory(CategoryFactory,
+#                                                             category_repository=dependencies.Repositories.category_repository)

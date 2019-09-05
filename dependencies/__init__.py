@@ -1,33 +1,29 @@
-from dependency_injector import containers, providers
-
-from domain import Configuration
-
-
-class Database(containers.DeclarativeContainer):
-    database = None
+# from dependency_injector import containers, providers
+#
+# from application.services import Configuration
 
 
-class Caches(containers.DeclarativeContainer):
-    account_cache = None
-    category_cache = None
+# class Database(containers.DeclarativeContainer):
+#     database = None
 
 
-class Repositories(containers.DeclarativeContainer):
-    account_repository = None
-    category_repository = None
+# class Caches(containers.DeclarativeContainer):
+#     account_cache = None
+#     category_cache = None
 
 
-class Factories(containers.DeclarativeContainer):
-    account_factory = None
-    category_factory = None
+# class Repositories(containers.DeclarativeContainer):
+#     account_repository = None
+#     category_repository = None
 
 
-class Configurations(containers.DeclarativeContainer):
-    config = providers.Factory(Configuration)
+# class Factories(containers.DeclarativeContainer):
+#     account_factory = None
+#     category_factory = None
 
 
-class Container(containers.DeclarativeContainer):
-    afas_mapper = None
-    cleanup_mapper = None
-    internal_transactions_mapper = None
-    pattern_mapper = None
+# class Container(containers.DeclarativeContainer):
+#     afas_mapper = None
+#     cleanup_mapper = None
+#     internal_transactions_mapper = None
+#     pattern_mapper = None

@@ -9,7 +9,6 @@ from bokeh.models import ColumnDataSource, HoverTool, TapTool, TableColumn, Date
 from bokeh.plotting import figure
 
 import application.services
-import dependencies
 import infrastructure
 import ui
 
@@ -18,8 +17,8 @@ logger = logging.getLogger(__name__)
 
 def get_category_plot(figure_manager):
     date_list = application.services.get_transaction_date_range()
-    category_repository = dependencies.Repositories.category_repository()
-    account_repository = dependencies.Repositories.account_repository()
+    category_repository = infrastructure.Infrastructure.category_repository()
+    account_repository = infrastructure.Infrastructure.account_repository()
     category = None
     amounts = [application.services.get_combined_amount_for_category_in_month(category, month) for month in date_list]
     settings = {'category': category,
@@ -83,7 +82,7 @@ def get_category_plot(figure_manager):
                     logger.info("Updating transaction category %s => %s", transaction, new_category)
                     transaction.update_category(new_category)
                     account_repository.save_transaction(transaction)
-                    dependencies.Database.database().connection.commit()
+                    infrastructure.Infrastructure.database().connection.commit()
     transactions_table.source.on_change('data', on_update_category)
 
     def on_selection_event(event):

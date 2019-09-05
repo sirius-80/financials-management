@@ -2,9 +2,7 @@ import csv
 import logging
 import re
 
-from dependency_injector import providers
-
-import dependencies
+import infrastructure
 from domain.account_management.services import TransactionCategoryMapper, InternalTransactionDetector
 
 logger = logging.getLogger(__name__)
@@ -47,7 +45,7 @@ class CategoryCleanupTransactionMapper(TransactionCategoryMapper):
 
 
 class MyInternalTransactionDetector(InternalTransactionDetector):
-    account_repository = dependencies.Repositories.account_repository()
+    account_repository = infrastructure.Infrastructure.account_repository()
 
     def is_internal_transaction(self, transaction):
         def extract_accountnr_from_iban(iban):
@@ -68,7 +66,7 @@ class InternalTransactionsMapper(TransactionCategoryMapper):
     """Maps transactions between own accounts to the 'Overboekingen' category."""
     DEFAULT_SCORE = 100
     internal_transactions_detector = MyInternalTransactionDetector()
-    internal_transactions_category = dependencies.Repositories.category_repository().get_category_by_qualified_name(
+    internal_transactions_category = infrastructure.Infrastructure.category_repository().get_category_by_qualified_name(
         "Overboekingen")
 
     def get_category_scores(self, transaction):
@@ -153,9 +151,9 @@ class _PatternTransactionCategoryMapper(TransactionCategoryMapper):
         return sorted(matches, key=lambda cs: cs.score, reverse=True)
 
 
-dependencies.Container.cleanup_mapper = providers.Singleton(CategoryCleanupTransactionMapper,
-                                                            category_repository=dependencies.Repositories.category_repository)
-dependencies.Container.internal_transactions_mapper = providers.Singleton(InternalTransactionsMapper)
-dependencies.Container.pattern_mapper = providers.Singleton(_PatternTransactionCategoryMapper,
-                                                            category_repository=dependencies.Repositories.category_repository,
-                                                            config=dependencies.Configurations.config)
+# dependencies.Container.cleanup_mapper = providers.Singleton(CategoryCleanupTransactionMapper,
+#                                                             category_repository=dependencies.Repositories.category_repository)
+# dependencies.Container.internal_transactions_mapper = providers.Singleton(InternalTransactionsMapper)
+# dependencies.Container.pattern_mapper = providers.Singleton(_PatternTransactionCategoryMapper,
+#                                                             category_repository=dependencies.Repositories.category_repository,
+#                                                             config=dependencies.Configurations.config)
