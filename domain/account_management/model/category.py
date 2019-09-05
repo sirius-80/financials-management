@@ -70,7 +70,3 @@ class CategoryFactory:
                 category.parent = next_parent
                 next_parent = category
         return category
-
-
-# dependencies.Factories.category_factory = providers.Factory(CategoryFactory,
-#                                                             category_repository=dependencies.Repositories.category_repository)

@@ -160,9 +160,3 @@ class _CategoryRepository(CategoryRepository):
                                             );"""
         self.db.connection.cursor().execute(sql_create_categories_table)
         self.db.connection.commit()
-
-
-# dependencies.Caches.category_cache = providers.Singleton(_CategoryCache, db=dependencies.Database.database)
-# dependencies.Repositories.category_repository = providers.Singleton(_CategoryRepository,
-#                                                                     db=dependencies.Database.database,
-#                                                                     cache=dependencies.Caches.category_cache)

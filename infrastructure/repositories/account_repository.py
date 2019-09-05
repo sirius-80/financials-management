@@ -204,9 +204,3 @@ class _AccountRepository(AccountRepository):
         cursor.execute(sql_create_accounts_table)
         cursor.execute(sql_create_transactions_table)
         self.db.connection.commit()
-
-
-# dependencies.Caches.account_cache = providers.Singleton(_AccountCache, db=dependencies.Database.database)
-# dependencies.Repositories.account_repository = providers.Singleton(_AccountRepository,
-#                                                                    db=dependencies.Database.database,
-#                                                                    cache=dependencies.Caches.account_cache)

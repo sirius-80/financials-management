@@ -149,11 +149,3 @@ class _PatternTransactionCategoryMapper(TransactionCategoryMapper):
                 matches.append(category_score)
 
         return sorted(matches, key=lambda cs: cs.score, reverse=True)
-
-
-# dependencies.Container.cleanup_mapper = providers.Singleton(CategoryCleanupTransactionMapper,
-#                                                             category_repository=dependencies.Repositories.category_repository)
-# dependencies.Container.internal_transactions_mapper = providers.Singleton(InternalTransactionsMapper)
-# dependencies.Container.pattern_mapper = providers.Singleton(_PatternTransactionCategoryMapper,
-#                                                             category_repository=dependencies.Repositories.category_repository,
-#                                                             config=dependencies.Configurations.config)

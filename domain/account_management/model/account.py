@@ -205,6 +205,3 @@ class AccountFactory:
                                   balance_after)
         transaction.register_domain_event(TransactionCreatedEvent(transaction))
         return transaction
-
-
-# dependencies.Factories.account_factory = providers.Factory(AccountFactory)

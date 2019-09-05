@@ -41,6 +41,3 @@ class DatabaseSqlite3:
         cursor.execute(sql, parameters)
         row = cursor.fetchone()
         return row
-
-
-# dependencies.Database.database = providers.Singleton(DatabaseSqlite3)
