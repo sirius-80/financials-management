@@ -2,6 +2,9 @@ import copy
 import logging
 import uuid
 
+from dependency_injector import providers
+
+import dependencies
 from domain.account_management.model import Entity, DomainEvent
 
 logger = logging.getLogger(__name__)
@@ -205,3 +208,6 @@ class AccountFactory:
                                   balance_after)
         transaction.register_domain_event(TransactionCreatedEvent(transaction))
         return transaction
+
+
+dependencies.Factories.account_factory = providers.Factory(AccountFactory)

@@ -70,7 +70,7 @@ def flag_internal_transaction(transaction, internal_transactions_detector, accou
 def on_transaction_created_event(event):
     logger.debug("Categorizing new transaction: %s", event.transaction)
     pattern_transaction_mapper = dependencies.Container.pattern_mapper()
-    afas_transaction_mapper = dependencies.Container.afas_mapper()
+    afas_transaction_mapper = application.services.afas.afas_mapper() #dependencies.Container.afas_mapper()
     cleanup_transaction_mapper = dependencies.Container.cleanup_mapper()
     internal_transactions_mapper = dependencies.Container.internal_transactions_mapper()
 
