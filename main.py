@@ -6,7 +6,6 @@ import logging
 from bokeh.io import curdoc
 
 import application
-import dependencies
 import infrastructure
 import ui
 
