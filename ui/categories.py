@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 
 def get_category_plot(figure_manager):
     date_list = application.services.get_transaction_date_range()
-    category_repository = infrastructure.Repositories.category_repository()
-    account_repository = infrastructure.Repositories.account_repository()
+    category_repository = infrastructure.Infrastructure.category_repository()
+    account_repository = infrastructure.Infrastructure.account_repository()
     category = None
     amounts = [application.services.get_combined_amount_for_category_in_month(category, month) for month in date_list]
     settings = {'category': category,
@@ -82,15 +82,24 @@ def get_category_plot(figure_manager):
                     logger.info("Updating transaction category %s => %s", transaction, new_category)
                     transaction.update_category(new_category)
                     account_repository.save_transaction(transaction)
-                    infrastructure.Database.database().connection.commit()
-
+                    infrastructure.Infrastructure.database().connection.commit()
     transactions_table.source.on_change('data', on_update_category)
 
     def on_selection_event(event):
         if amounts_source.selected.indices:
-            update_transaction_table()
+            index = amounts_source.selected.indices[0]
+            start_date = amounts_source.data['date'][index]
+            logger.debug("Selecting category '%s' and date %s", settings['category'], start_date)
+            if settings['granularity'] == ui.FigureManager.TimeUnit.YEAR:
+                end_date = start_date + dateutil.relativedelta.relativedelta(years=1)
+            else:
+                end_date = start_date + dateutil.relativedelta.relativedelta(months=1)
+            cat = category_repository.get_category_by_qualified_name(settings['category'])
+            update_transaction_table(cat, start_date, end_date)
+            figure_manager.set_date_range(start_date, end_date)
         else:
             clear_transaction_table()
+            figure_manager.set_date_range(None, None)
 
     def clear_transaction_table():
         data = dict(
@@ -106,18 +115,10 @@ def get_category_plot(figure_manager):
         settings['transactions'] = []
         transaction_source.data = data
 
-    def update_transaction_table():
-        index = amounts_source.selected.indices[0]
-        start_date = amounts_source.data['date'][index]
-        logger.debug("Selecting category '%s' and date %s", settings['category'], start_date)
-        if settings['granularity'] == ui.FigureManager.TimeUnit.YEAR:
-            end_date = start_date + dateutil.relativedelta.relativedelta(years=1)
-        else:
-            end_date = start_date + dateutil.relativedelta.relativedelta(months=1)
+    def update_transaction_table(selected_category, start_date, end_date):
         logger.debug("Selecting transactions between %s and %s", start_date, end_date)
         selected_transactions = application.services.get_transactions_for_category_between(start_date, end_date,
-                                                                                           category=category_repository.get_category_by_qualified_name(
-                                                                                               settings['category']))
+                                                                                           selected_category)
         settings['transactions'] = selected_transactions
         pprint.pprint(selected_transactions)
         data = dict()
@@ -157,6 +158,7 @@ def get_category_plot(figure_manager):
         logger.debug("Callback %s: %s -> %s", attrname, str(old), str(new))
         settings['category'] = new
         update_plot()
+        figure_manager.set_category(new)
 
     def update_date_range(attrname, old, new):
         logger.debug("Callback %s: %s -> %s", attrname, str(old), str(new))

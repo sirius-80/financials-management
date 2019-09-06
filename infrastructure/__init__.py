@@ -1,30 +1,13 @@
 from dependency_injector import containers, providers
 
-import domain.account_management.model.account
-import domain.account_management.model.category
-import infrastructure.repositories.account_repository
-import infrastructure.repositories.category_repository
+from . import repositories
+from .repositories import category_repository, account_repository
 
 
-class Database(containers.DeclarativeContainer):
-    database = providers.Singleton(infrastructure.repositories.DatabaseSqlite3)
-
-
-class Caches(containers.DeclarativeContainer):
-    account_cache = providers.Singleton(infrastructure.repositories.account_repository._AccountCache,
-                                        db=Database.database)
-    category_cache = providers.Singleton(infrastructure.repositories.category_repository._CategoryCache,
-                                         db=Database.database)
-
-
-class Repositories(containers.DeclarativeContainer):
-    account_repository = providers.Singleton(infrastructure.repositories.account_repository._AccountRepository,
-                                             db=Database.database, cache=Caches.account_cache)
-    category_repository = providers.Singleton(infrastructure.repositories.category_repository._CategoryRepository,
-                                              db=Database.database, cache=Caches.category_cache)
-
-
-class Factories(containers.DeclarativeContainer):
-    account_factory = providers.Factory(domain.account_management.model.account.AccountFactory)
-    category_factory = providers.Factory(domain.account_management.model.category.CategoryFactory,
-                                         category_repository=Repositories.category_repository)
+class Infrastructure(containers.DeclarativeContainer):
+    database = providers.Singleton(repositories.DatabaseSqlite3)
+    category_cache = providers.Singleton(category_repository.CategoryCache, db=database)
+    category_repository = providers.Singleton(category_repository.DbCategoryRepository, db=database,
+                                              cache=category_cache)
+    account_cache = providers.Singleton(account_repository.AccountCache, db=database)
+    account_repository = providers.Singleton(account_repository.DbAccountRepository, db=database, cache=account_cache)

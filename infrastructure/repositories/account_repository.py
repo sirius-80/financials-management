@@ -7,7 +7,7 @@ from infrastructure.services import publish_domain_events
 logger = logging.getLogger(__name__)
 
 
-class _AccountCache(AccountRepository):
+class AccountCache(AccountRepository):
     def __init__(self, db):
         self.db = db
         self.accounts = {}
@@ -60,7 +60,7 @@ class _AccountCache(AccountRepository):
 
             logger.debug("Fetching transactions for account %s", account)
             for trow in self.db.query("SELECT * FROM transactions WHERE account = ?", (account.id,)):
-                category = infrastructure.Repositories.category_repository().get_category(trow["category"])
+                category = infrastructure.Infrastructure.category_repository().get_category(trow["category"])
                 transaction = Transaction(trow["id"], account, trow["serial"], trow["date"],
                                           trow["amount"], trow["name"], trow["description"], trow["counter_account"],
                                           trow["balance_after"], trow["internal"], category)
@@ -70,7 +70,7 @@ class _AccountCache(AccountRepository):
         logger.info("Cache initialized...")
 
 
-class _AccountRepository(AccountRepository):
+class DbAccountRepository(AccountRepository):
     """
     TODO: Consider incorporating an ORM, instead of using my own cache.
     """

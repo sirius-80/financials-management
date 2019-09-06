@@ -8,6 +8,7 @@ class Category(Entity):
         super().__init__(category_id)
         self.name = name
         self.parent = parent
+        self.children = []
 
     @property
     def qualified_name(self):
@@ -50,6 +51,7 @@ class CategoryRepository:
 class CategoryFactory:
     """Factory to create new Category entities. Note that the caller is responsible to save the created
         instances using the CategoryRepository."""
+
     def __init__(self, category_repository):
         self.repository = category_repository
 

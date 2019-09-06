@@ -6,7 +6,7 @@ from domain.account_management.model.category import CategoryRepository, Categor
 logger = logging.getLogger(__name__)
 
 
-class _CategoryCache(CategoryRepository):
+class CategoryCache(CategoryRepository):
     def __init__(self, db):
         self.db = db
         self.categories = {}
@@ -49,6 +49,9 @@ class _CategoryCache(CategoryRepository):
                     parent = None
                 category = self.get_category(row["id"]) or Category(row["id"], row["name"], parent)
                 self.save_category(category)
+                if parent and category not in parent.children:
+                    parent.children.append(category)
+                    self.save_category(parent)
                 return category
             else:
                 return None
@@ -64,12 +67,15 @@ class _CategoryCache(CategoryRepository):
                     parent = None
                 category = self.get_category(row["id"]) or Category(row["id"], row["name"], parent)
                 self.save_category(category)
+                if parent and category not in parent.children:
+                    parent.children.append(category)
+                    self.save_category(parent)
         except sqlite3.Error as e:
             logger.warning("%s: No data from database: %s", self, e)
         # logger.info("Cache initialized...")
 
 
-class _CategoryRepository(CategoryRepository):
+class DbCategoryRepository(CategoryRepository):
     def __init__(self, db, cache):
         self.db = db
         self._cache = cache
@@ -77,56 +83,14 @@ class _CategoryRepository(CategoryRepository):
         self._cache.init_cache()
 
     def get_category_by_qualified_name(self, qualified_name):
-        if self._cache:
-            return self._cache.get_category_by_qualified_name(qualified_name)
-        else:
-            names = qualified_name.split("::")
-            next_parent = None
-            category = None
-            for name in names:
-                row = self.db.query_one("SELECT * FROM categories WHERE name = ? ", (name,))
-                category = Category(row["id"], row["name"], next_parent)
-                next_parent = category
-            return category
+        return self._cache.get_category_by_qualified_name(qualified_name)
 
     def get_category(self, category_id):
-        if self._cache:
-            logger.debug("Retrieving category with id %s from cache", category_id)
-            return self._cache.get_category(category_id)
-        else:
-            logger.debug("Retrieving category with id %s from database", category_id)
-            row = self.db.query_one("SELECT * FROM categories WHERE id = ?", (category_id,))
-            logger.debug("Got data: %s", row)
-            if row["parent"]:
-                parent = self.get_category(row["parent"])
-            else:
-                parent = None
-            category = Category(row["id"], row["name"], parent)
-            if self._cache:
-                self._cache.save_category(category)
-
-            return category
+        logger.debug("Retrieving category with id %s from cache", category_id)
+        return self._cache.get_category(category_id)
 
     def get_categories(self):
-        if self._cache:
-            return self._cache.get_categories()
-        else:
-            categories = []
-
-            # First construct all categories with parent id's (since the parent may not be constructed yet)
-            for row in self.db.query("SELECT * FROM categories"):
-                categories.append(Category(row["id"], row["name"], row["parent"]))
-
-            # Then resolve the parents
-            for category in categories:
-                if category.parent:
-                    parents = [cat for cat in categories if cat.id == category.parent]
-                    if len(parents) != 1:
-                        raise ValueError("Category (%s) should have exactly 1 parent, but has %d (%s)",
-                                         category, len(parents), parents)
-                else:
-                    category.parent = None
-            return categories
+        return self._cache.get_categories()
 
     def save_category(self, category):
         logger.debug("%s: update_category(%s (id=%s))", self, category, category.id)
@@ -136,6 +100,8 @@ class _CategoryRepository(CategoryRepository):
             cursor.execute("INSERT INTO categories (id, name, parent) VALUES (?, ?, ?)",
                            (category.id, category.name, category.parent and category.parent.id or None))
         if category.parent and not self.get_category_by_qualified_name(category.parent.qualified_name):
+            if category not in category.parent.children:
+                category.parent.children.append(category)
             self.save_category(category.parent)
 
         self._cache.save_category(category)

@@ -194,13 +194,15 @@ class AccountFactory:
     """Factory to create new Account and Transaction entities. Note that the caller is responsible to save the created
     instances using the AccountRepository."""
 
-    def create_account(self, name, bank):
+    @staticmethod
+    def create_account(name, bank):
         logger.debug("Creating account: %s (%s)", name, bank)
         account = Account(uuid.uuid4().hex, name, bank)
         account.register_domain_event(AccountCreatedEvent(account))
         return account
 
-    def create_transaction(self, account, date, amount, name, description, serial, counter_account, balance_after):
+    @staticmethod
+    def create_transaction(account, date, amount, name, description, serial, counter_account, balance_after):
         transaction = Transaction(uuid.uuid4().hex, account, serial, date, amount, name, description, counter_account,
                                   balance_after)
         transaction.register_domain_event(TransactionCreatedEvent(transaction))

@@ -1,6 +1,6 @@
 import csv
-import re
 import logging
+import re
 
 import infrastructure
 from domain.account_management.services import TransactionCategoryMapper, InternalTransactionDetector
@@ -45,7 +45,7 @@ class CategoryCleanupTransactionMapper(TransactionCategoryMapper):
 
 
 class MyInternalTransactionDetector(InternalTransactionDetector):
-    account_repository = infrastructure.Repositories.account_repository()
+    account_repository = infrastructure.Infrastructure.account_repository()
 
     def is_internal_transaction(self, transaction):
         def extract_accountnr_from_iban(iban):
@@ -66,7 +66,7 @@ class InternalTransactionsMapper(TransactionCategoryMapper):
     """Maps transactions between own accounts to the 'Overboekingen' category."""
     DEFAULT_SCORE = 100
     internal_transactions_detector = MyInternalTransactionDetector()
-    internal_transactions_category = infrastructure.Repositories.category_repository().get_category_by_qualified_name(
+    internal_transactions_category = infrastructure.Infrastructure.category_repository().get_category_by_qualified_name(
         "Overboekingen")
 
     def get_category_scores(self, transaction):
@@ -107,7 +107,7 @@ def map_transaction(transaction, transaction_mapper, account_repository, update=
             account_repository.save_transaction(transaction)
 
 
-class _PatternTransactionCategoryMapper(TransactionCategoryMapper):
+class PatternTransactionCategoryMapper(TransactionCategoryMapper):
     def __init__(self, category_repository, config):
         self.category_repository = category_repository
         self.names = {}

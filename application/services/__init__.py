@@ -3,16 +3,16 @@ import logging
 import os
 
 from dependency_injector import containers, providers
-import application.services.transaction_mapping
-import application.services.afas
 
+import application.services.transaction_mapping
 import infrastructure
+from . import afas
 
 logger = logging.getLogger(__name__)
 
 
 def get_combined_balance_at(date):
-    accounts = infrastructure.Repositories.account_repository().get_accounts()
+    accounts = infrastructure.Infrastructure.account_repository().get_accounts()
     balance = 0
     for account in accounts:
         balance += account.get_balance_at(date)
@@ -20,7 +20,7 @@ def get_combined_balance_at(date):
 
 
 def get_combined_amount_for_category_in_month(category, date):
-    accounts = infrastructure.Repositories.account_repository().get_accounts()
+    accounts = infrastructure.Infrastructure.account_repository().get_accounts()
     amount = 0
     for account in accounts:
         amount += account.get_combined_amount_for_category_in_month(category, date)
@@ -28,7 +28,7 @@ def get_combined_amount_for_category_in_month(category, date):
 
 
 def get_transactions_between(start_date, end_date):
-    accounts = infrastructure.Repositories.account_repository().get_accounts()
+    accounts = infrastructure.Infrastructure.account_repository().get_accounts()
     transactions = []
     for account in accounts:
         transactions.extend(account.get_transactions_between(start_date, end_date))
@@ -36,7 +36,7 @@ def get_transactions_between(start_date, end_date):
 
 
 def get_transactions_for_category_between(start_date, end_date, category):
-    accounts = infrastructure.Repositories.account_repository().get_accounts()
+    accounts = infrastructure.Infrastructure.account_repository().get_accounts()
     transactions = []
     for account in accounts:
         transactions.extend(account.get_transactions_for_category_between(start_date, end_date, category))
@@ -45,7 +45,7 @@ def get_transactions_for_category_between(start_date, end_date, category):
 
 def get_date_of_first_transaction():
     """Returns the date of the first transaction for all accounts."""
-    accounts = infrastructure.Repositories.account_repository().get_accounts()
+    accounts = infrastructure.Infrastructure.account_repository().get_accounts()
     first_date = datetime.date.today()
     for account in accounts:
         account_date = account.get_first_transaction_date()
@@ -56,7 +56,7 @@ def get_date_of_first_transaction():
 
 def get_date_of_last_transaction():
     """Returns the date of the last transaction for all accounts."""
-    accounts = infrastructure.Repositories.account_repository().get_accounts()
+    accounts = infrastructure.Infrastructure.account_repository().get_accounts()
     last_date = datetime.date.today()
     for account in accounts:
         account_date = account.get_last_transaction_date()
@@ -93,18 +93,14 @@ class Configuration:
         return os.path.join(self.data_directory, filename)
 
 
-class Configurations(containers.DeclarativeContainer):
+class Services(containers.DeclarativeContainer):
     config = providers.Factory(Configuration)
-
-
-class Container(containers.DeclarativeContainer):
-    afas_mapper = providers.Singleton(afas._AfasTransactionCategoryMapper,
-                                      category_repository=infrastructure.Repositories.category_repository,
-                                      config=Configurations.config)
+    afas_mapper = providers.Singleton(afas.AfasTransactionCategoryMapper,
+                                      category_repository=infrastructure.Infrastructure.category_repository,
+                                      config=config)
     cleanup_mapper = providers.Singleton(transaction_mapping.CategoryCleanupTransactionMapper,
-                                         category_repository=infrastructure.Repositories.category_repository)
-    internal_transactions_mapper = providers.Singleton(
-        transaction_mapping.InternalTransactionsMapper)
-    pattern_mapper = providers.Singleton(transaction_mapping._PatternTransactionCategoryMapper,
-                                         category_repository=infrastructure.Repositories.category_repository,
-                                         config=Configurations.config)
+                                         category_repository=infrastructure.Infrastructure.category_repository)
+    internal_transactions_mapper = providers.Singleton(transaction_mapping.InternalTransactionsMapper)
+    pattern_mapper = providers.Singleton(transaction_mapping.PatternTransactionCategoryMapper,
+                                         category_repository=infrastructure.Infrastructure.category_repository,
+                                         config=config)

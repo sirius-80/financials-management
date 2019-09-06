@@ -3,6 +3,7 @@ import datetime
 import decimal
 import logging
 
+import domain.account_management
 import infrastructure
 from domain.account_management import services
 
@@ -47,8 +48,8 @@ def import_transactions_from_rabobank_csv(filename, bank):
             # mapping.map_transaction(transaction)
 
 
-account_repository = infrastructure.Repositories.account_repository()
-account_factory = infrastructure.Factories.account_factory()
+account_repository = infrastructure.Infrastructure.account_repository()
+account_factory = domain.account_management.AccountManagement.account_factory()
 logger = logging.getLogger(__name__)
 
 
