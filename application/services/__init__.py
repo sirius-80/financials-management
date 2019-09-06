@@ -95,12 +95,12 @@ class Configuration:
 
 class Services(containers.DeclarativeContainer):
     config = providers.Factory(Configuration)
-    afas_mapper = providers.Singleton(afas._AfasTransactionCategoryMapper,
+    afas_mapper = providers.Singleton(afas.AfasTransactionCategoryMapper,
                                       category_repository=infrastructure.Infrastructure.category_repository,
                                       config=config)
     cleanup_mapper = providers.Singleton(transaction_mapping.CategoryCleanupTransactionMapper,
                                          category_repository=infrastructure.Infrastructure.category_repository)
     internal_transactions_mapper = providers.Singleton(transaction_mapping.InternalTransactionsMapper)
-    pattern_mapper = providers.Singleton(transaction_mapping._PatternTransactionCategoryMapper,
+    pattern_mapper = providers.Singleton(transaction_mapping.PatternTransactionCategoryMapper,
                                          category_repository=infrastructure.Infrastructure.category_repository,
                                          config=config)

@@ -34,7 +34,6 @@ def get_pie_plot(figure_manager):
 def get_data(parent_category=None, start_date=None, end_date=None):
     start_date = start_date or application.services.get_date_of_first_transaction()
     end_date = end_date or application.services.get_date_of_last_transaction()
-    x = {}
     if parent_category:
         categories = parent_category.children or [parent_category]
     else:

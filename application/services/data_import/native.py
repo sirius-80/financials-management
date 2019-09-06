@@ -43,8 +43,6 @@ def import_transactions(filename, account_repository, account_factory, category_
         return
 
     with open(filename) as csv_file:
-        fieldnames = ["transaction_id""amount", "date", "name", "description", "balance_after", "serial",
-                      "counter_account", "account", "category"]
         reader = csv.DictReader(csv_file)
         for row in reader:
             transaction_id = row["transaction_id"]

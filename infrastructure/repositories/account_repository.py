@@ -7,7 +7,7 @@ from infrastructure.services import publish_domain_events
 logger = logging.getLogger(__name__)
 
 
-class _AccountCache(AccountRepository):
+class AccountCache(AccountRepository):
     def __init__(self, db):
         self.db = db
         self.accounts = {}
@@ -70,7 +70,7 @@ class _AccountCache(AccountRepository):
         logger.info("Cache initialized...")
 
 
-class _AccountRepository(AccountRepository):
+class DbAccountRepository(AccountRepository):
     """
     TODO: Consider incorporating an ORM, instead of using my own cache.
     """

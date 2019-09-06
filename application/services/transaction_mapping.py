@@ -107,7 +107,7 @@ def map_transaction(transaction, transaction_mapper, account_repository, update=
             account_repository.save_transaction(transaction)
 
 
-class _PatternTransactionCategoryMapper(TransactionCategoryMapper):
+class PatternTransactionCategoryMapper(TransactionCategoryMapper):
     def __init__(self, category_repository, config):
         self.category_repository = category_repository
         self.names = {}
