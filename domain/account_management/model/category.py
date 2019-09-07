@@ -1,10 +1,16 @@
+import logging
 import uuid
 
+from dependency_injector import providers
+
 from domain.account_management.model import Entity
+
+logger = logging.getLogger(__name__)
 
 
 class Category(Entity):
     """A transaction Category marks"""
+
     def __init__(self, category_id, name, parent=None):
         super().__init__(category_id)
         self.name = name
@@ -71,3 +77,8 @@ class CategoryFactory:
                 category.parent = next_parent
                 next_parent = category
         return category
+
+
+logger.info("creating CategoryRepository dependency")
+category_repository = providers.Dependency(instance_of=CategoryRepository)
+category_factory = providers.Singleton(CategoryFactory, category_repository)

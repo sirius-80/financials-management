@@ -2,7 +2,8 @@ import csv
 import logging
 import re
 
-import infrastructure
+from domain.account_management.model.account import account_repository
+from domain.account_management.model.category import category_repository
 from domain.account_management.services import TransactionCategoryMapper, InternalTransactionDetector
 
 logger = logging.getLogger(__name__)
@@ -21,18 +22,18 @@ class CategoryCleanupTransactionMapper(TransactionCategoryMapper):
     """
     DEFAULT_SCORE = 100
 
-    def __init__(self, category_repository):
+    def __init__(self):
         self.mapping = [
-            (category_repository.get_category_by_qualified_name("Uitgaven::Overige uitgaven::Overboekingen"),
-             category_repository.get_category_by_qualified_name("Overboekingen")),
-            (category_repository.get_category_by_qualified_name("Uitgaven::Telecom::Televisie"),
-             category_repository.get_category_by_qualified_name("Uitgaven::Telecom::Internet/TV")),
-            (category_repository.get_category_by_qualified_name("Uitgaven::Telecom::Internet"),
-             category_repository.get_category_by_qualified_name("Uitgaven::Telecom::Internet/TV")),
-            (category_repository.get_category_by_qualified_name("Uitgaven::Overige uitgaven::Abonnementen"),
-             category_repository.get_category_by_qualified_name("Uitgaven::Vrije tijd::Abonnementen")),
-            (category_repository.get_category_by_qualified_name("Inkomsten::Belastingtoeslagen"),
-             category_repository.get_category_by_qualified_name("Inkomsten::Belastingteruggaaf")),
+            (category_repository().get_category_by_qualified_name("Uitgaven::Overige uitgaven::Overboekingen"),
+             category_repository().get_category_by_qualified_name("Overboekingen")),
+            (category_repository().get_category_by_qualified_name("Uitgaven::Telecom::Televisie"),
+             category_repository().get_category_by_qualified_name("Uitgaven::Telecom::Internet/TV")),
+            (category_repository().get_category_by_qualified_name("Uitgaven::Telecom::Internet"),
+             category_repository().get_category_by_qualified_name("Uitgaven::Telecom::Internet/TV")),
+            (category_repository().get_category_by_qualified_name("Uitgaven::Overige uitgaven::Abonnementen"),
+             category_repository().get_category_by_qualified_name("Uitgaven::Vrije tijd::Abonnementen")),
+            (category_repository().get_category_by_qualified_name("Inkomsten::Belastingtoeslagen"),
+             category_repository().get_category_by_qualified_name("Inkomsten::Belastingteruggaaf")),
         ]
 
     def get_category_scores(self, transaction):
@@ -45,8 +46,6 @@ class CategoryCleanupTransactionMapper(TransactionCategoryMapper):
 
 
 class MyInternalTransactionDetector(InternalTransactionDetector):
-    account_repository = infrastructure.Infrastructure.account_repository()
-
     def is_internal_transaction(self, transaction):
         def extract_accountnr_from_iban(iban):
             m = re.search("^[A-Z]{2}[0-9]{2}[A-Z]+0*([0-9]+)$", iban)
@@ -55,7 +54,7 @@ class MyInternalTransactionDetector(InternalTransactionDetector):
             else:
                 return iban
 
-        for account in self.account_repository.get_accounts():
+        for account in account_repository().get_accounts():
             if account.name == transaction.counter_account or extract_accountnr_from_iban(
                     account.name) == transaction.counter_account:
                 return True
@@ -66,7 +65,7 @@ class InternalTransactionsMapper(TransactionCategoryMapper):
     """Maps transactions between own accounts to the 'Overboekingen' category."""
     DEFAULT_SCORE = 100
     internal_transactions_detector = MyInternalTransactionDetector()
-    internal_transactions_category = infrastructure.Infrastructure.category_repository().get_category_by_qualified_name(
+    internal_transactions_category = category_repository().get_category_by_qualified_name(
         "Overboekingen")
 
     def get_category_scores(self, transaction):
@@ -86,16 +85,7 @@ def get_best_scoring_category(category_score_list):
     return category
 
 
-def map_transactions(transaction_mapper, account_repository, update=False):
-    """Map all transactions from all accounts using given transaction_mapper. If the update flag is set to True, then
-    transactions which have already been mapped will be updated. If the update flag is False, only uncategorized
-    transactions will be processed."""
-    for account in account_repository.get_accounts():
-        for transaction in account.get_transactions():
-            map_transaction(transaction, transaction_mapper, account_repository, update)
-
-
-def map_transaction(transaction, transaction_mapper, account_repository, update=False):
+def map_transaction(transaction, transaction_mapper, update=False):
     """Map given transaction using given transaction_mapper. If the update flag is set to True, then transactions which
     have already been mapped will be updated. If the update flag is False, only uncategorized transactions will be
     processed."""
@@ -104,12 +94,11 @@ def map_transaction(transaction, transaction_mapper, account_repository, update=
     if category:
         if (update or not transaction.category) and transaction.category != category:
             transaction.update_category(category)
-            account_repository.save_transaction(transaction)
+            account_repository().save_transaction(transaction)
 
 
 class PatternTransactionCategoryMapper(TransactionCategoryMapper):
-    def __init__(self, category_repository, config):
-        self.category_repository = category_repository
+    def __init__(self, config):
         self.names = {}
         mapping_filename = config.get_file("mapping.csv")
         logger.info("Reading mapping from %s", mapping_filename)
@@ -120,7 +109,7 @@ class PatternTransactionCategoryMapper(TransactionCategoryMapper):
                 description = row["Description"]
                 cat_name = row["Category"]
                 try:
-                    category = self.category_repository.get_category_by_qualified_name(cat_name)
+                    category = category_repository().get_category_by_qualified_name(cat_name)
                 except:
                     logger.warning("Failed to get category for %s", cat_name)
                     raise

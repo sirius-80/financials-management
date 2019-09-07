@@ -7,7 +7,7 @@ from bokeh.plotting import figure
 from bokeh.transform import cumsum
 
 import application.services
-import infrastructure
+from domain.account_management.model.category import category_repository
 
 
 def get_pie_plot(figure_manager):
@@ -15,7 +15,7 @@ def get_pie_plot(figure_manager):
     fig = figure(title="Subcategories", toolbar_location=None, tooltips="@category: €@amount{0,0}",
                  x_range=(-0.5, 1.0))
     pie = fig.wedge(x=0, y=1, radius=0.4, start_angle=cumsum('angle', include_zero=True), end_angle=cumsum('angle'),
-              line_color="white", fill_color='color', legend='category', source=source)
+                    line_color="white", fill_color='color', legend='category', source=source)
     fig.legend.click_policy = "mute"
     fig.axis.axis_label = None
     fig.axis.visible = False
@@ -37,8 +37,7 @@ def get_data(parent_category=None, start_date=None, end_date=None):
     if parent_category:
         categories = parent_category.children or [parent_category]
     else:
-        category_repository = infrastructure.Infrastructure.category_repository()
-        categories = [c for c in category_repository.get_categories() if not c.parent]
+        categories = [c for c in category_repository().get_categories() if not c.parent]
     x = {}
     for category in categories:
         x[category.qualified_name] = abs(float(sum([t.amount for t in

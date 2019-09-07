@@ -9,16 +9,15 @@ from bokeh.models import ColumnDataSource, HoverTool, TapTool, TableColumn, Date
 from bokeh.plotting import figure
 
 import application.services
-import infrastructure
 import ui
+from domain.account_management.model.account import account_repository
+from domain.account_management.model.category import category_repository
 
 logger = logging.getLogger(__name__)
 
 
 def get_category_plot(figure_manager):
     date_list = application.services.get_transaction_date_range()
-    category_repository = infrastructure.Infrastructure.category_repository()
-    account_repository = infrastructure.Infrastructure.account_repository()
     category = None
     amounts = [application.services.get_combined_amount_for_category_in_month(category, month) for month in date_list]
     settings = {'category': category,
@@ -52,7 +51,7 @@ def get_category_plot(figure_manager):
                     width=100),
         TableColumn(field="name", title="Name"),
         TableColumn(field="category", title="Category",
-                    editor=SelectEditor(options=["None"] + [str(c) for c in category_repository.get_categories()])),
+                    editor=SelectEditor(options=["None"] + [str(c) for c in category_repository().get_categories()])),
         TableColumn(field="description", title="Description", width=800),
         TableColumn(field="counter_account", title="Counter account", width=200),
         TableColumn(field="internal", title="Internal", editor=CheckboxEditor(), width=50)
@@ -78,11 +77,10 @@ def get_category_plot(figure_manager):
             logger.info("Update!")
             for transaction, category_qualified_name in zip(settings['transactions'], table_categories):
                 if str(transaction.category) != category_qualified_name:
-                    new_category = category_repository.get_category_by_qualified_name(category_qualified_name)
+                    new_category = category_repository().get_category_by_qualified_name(category_qualified_name)
                     logger.info("Updating transaction category %s => %s", transaction, new_category)
                     transaction.update_category(new_category)
-                    account_repository.save_transaction(transaction)
-                    infrastructure.Infrastructure.database().connection.commit()
+                    account_repository().save_transaction(transaction)
     transactions_table.source.on_change('data', on_update_category)
 
     def on_selection_event(event):
@@ -94,7 +92,7 @@ def get_category_plot(figure_manager):
                 end_date = start_date + dateutil.relativedelta.relativedelta(years=1)
             else:
                 end_date = start_date + dateutil.relativedelta.relativedelta(months=1)
-            cat = category_repository.get_category_by_qualified_name(settings['category'])
+            cat = category_repository().get_category_by_qualified_name(settings['category'])
             update_transaction_table(cat, start_date, end_date)
             figure_manager.set_date_range(start_date, end_date)
         else:
@@ -138,7 +136,7 @@ def get_category_plot(figure_manager):
         data = dict()
         data['date'] = application.services.get_transaction_date_range(day_nr=1)
         data['amount'] = [application.services.get_combined_amount_for_category_in_month(
-            category_repository.get_category_by_qualified_name(settings['category']), month) for month in date_list]
+            category_repository().get_category_by_qualified_name(settings['category']), month) for month in date_list]
         if settings['granularity'] == ui.FigureManager.TimeUnit.YEAR:
             amounts_by_year = []
             for i in range(len(data['amount'])):
@@ -171,7 +169,7 @@ def get_category_plot(figure_manager):
         update_plot()
 
     category_selector = Select(title="Category", options=["None"] + [str(c) for c in
-                                                                     category_repository.get_categories()], width=200)
+                                                                     category_repository().get_categories()], width=200)
     category_selector.on_change('value', update_category)
     date_range_selector = Select(title="Granularity", options=["Month", "Year"], width=200)
     date_range_selector.on_change('value', update_date_range)
