@@ -1,7 +1,10 @@
 import logging
 import sqlite3
 
-from domain.account_management.model.category import CategoryRepository, Category
+from dependency_injector import providers
+
+from domain.account_management.model.category import CategoryRepository, Category, category_repository
+from infrastructure.repositories import database
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +108,7 @@ class DbCategoryRepository(CategoryRepository):
             self.save_category(category.parent)
 
         self._cache.save_category(category)
+        self.db.connection.commit()
 
     def _create_tables(self):
         sql_create_categories_table = """CREATE TABLE IF NOT EXISTS categories (
@@ -115,3 +119,9 @@ class DbCategoryRepository(CategoryRepository):
                                             );"""
         self.db.connection.cursor().execute(sql_create_categories_table)
         self.db.connection.commit()
+
+
+category_cache = providers.Singleton(CategoryCache, db=database)
+logger.info("Providing CategoryRepository dependency")
+category_repository.provided_by(
+    providers.Singleton(DbCategoryRepository, db=database, cache=category_cache))

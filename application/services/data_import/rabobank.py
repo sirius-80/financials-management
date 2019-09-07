@@ -3,9 +3,8 @@ import datetime
 import decimal
 import logging
 
-import domain.account_management
-import infrastructure
 from domain.account_management import services
+from domain.account_management.model.account import account_repository, account_factory
 
 
 def import_transactions_from_rabobank_csv(filename, bank):
@@ -40,24 +39,22 @@ def import_transactions_from_rabobank_csv(filename, bank):
                 else:
                     logger.debug("Skipping duplicate transaction: %s", existing_transactions[0])
             else:
-                transaction = account_factory.create_transaction(account, date, amount, name, description, serial,
-                                                                 counter_account, balance)
-                account_repository.save_transaction(transaction)
+                transaction = account_factory().create_transaction(account, date, amount, name, description, serial,
+                                                                   counter_account, balance)
+                account_repository().save_transaction(transaction)
                 account.add_transaction(transaction)
 
             # mapping.map_transaction(transaction)
 
 
-account_repository = infrastructure.Infrastructure.account_repository()
-account_factory = domain.account_management.AccountManagement.account_factory()
 logger = logging.getLogger(__name__)
 
 
 def _get_or_create_account(account_name, bank):
     """Searches the repository for an account with given name and bank and returns it if found.
     Otherwise returns a new account object."""
-    account = account_repository.get_account_by_name_and_bank(account_name, bank)
+    account = account_repository().get_account_by_name_and_bank(account_name, bank)
     if not account:
-        account = account_factory.create_account(account_name, bank)
-        account_repository.save_account(account)
+        account = account_factory().create_account(account_name, bank)
+        account_repository().save_account(account)
     return account

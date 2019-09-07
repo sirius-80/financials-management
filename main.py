@@ -5,8 +5,12 @@ import logging
 
 from bokeh.io import curdoc
 
+# Note that the repository packages need to be imported before anything else, in order for injection of the repository
+# implementations in the domain to work
+__import__("infrastructure.repositories.account_repository")
+__import__("infrastructure.repositories.category_repository")
+
 import application
-import infrastructure
 import ui
 
 
@@ -37,7 +41,6 @@ def main():
         transaction_file = "transactions.csv"
         logger.info("Importing native csv-files: %s, %s and %s", account_file, category_file, transaction_file)
         application.import_native_data(account_file, transaction_file, category_file)
-        infrastructure.Infrastructure.database().connection.commit()
         return
 
     if args.export_data:
@@ -53,11 +56,9 @@ def main():
     if args.import_rabobank_csv:
         logger.info("Importing rabobank csv-file: %s", args.import_rabobank_csv)
         application.import_rabobank_transactions([args.import_rabobank_csv])
-        infrastructure.Infrastructure.database().connection.commit()
         return
 
-    account_repository = infrastructure.Infrastructure.account_repository()
-    application.log_current_account_info(account_repository)
+    application.log_current_account_info()
 
     ui.plot_data_with_bokeh(curdoc())
 

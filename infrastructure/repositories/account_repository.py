@@ -1,7 +1,10 @@
 import logging
 
-import infrastructure
-from domain.account_management.model.account import AccountRepository, Account, Transaction
+from dependency_injector import providers
+
+from domain.account_management.model.account import AccountRepository, Account, Transaction, account_repository
+from domain.account_management.model.category import category_repository
+from infrastructure.repositories import database
 from infrastructure.services import publish_domain_events
 
 logger = logging.getLogger(__name__)
@@ -60,7 +63,7 @@ class AccountCache(AccountRepository):
 
             logger.debug("Fetching transactions for account %s", account)
             for trow in self.db.query("SELECT * FROM transactions WHERE account = ?", (account.id,)):
-                category = infrastructure.Infrastructure.category_repository().get_category(trow["category"])
+                category = category_repository().get_category(trow["category"])
                 transaction = Transaction(trow["id"], account, trow["serial"], trow["date"],
                                           trow["amount"], trow["name"], trow["description"], trow["counter_account"],
                                           trow["balance_after"], trow["internal"], category)
@@ -116,6 +119,7 @@ class DbAccountRepository(AccountRepository):
             self._cache.save_transaction(transaction)
 
         publish_domain_events(transaction.flush_domain_events())
+        self.db.connection.commit()
         return transaction
 
     def get_accounts(self):
@@ -204,3 +208,8 @@ class DbAccountRepository(AccountRepository):
         cursor.execute(sql_create_accounts_table)
         cursor.execute(sql_create_transactions_table)
         self.db.connection.commit()
+
+
+account_cache = providers.Singleton(AccountCache, db=database)
+account_repository.provided_by(
+    providers.Singleton(DbAccountRepository, db=database, cache=account_cache))

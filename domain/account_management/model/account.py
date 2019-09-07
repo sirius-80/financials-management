@@ -2,6 +2,8 @@ import copy
 import logging
 import uuid
 
+from dependency_injector import providers
+
 from domain.account_management.model import Entity, DomainEvent
 
 logger = logging.getLogger(__name__)
@@ -219,3 +221,7 @@ class AccountFactory:
                                   balance_after)
         transaction.register_domain_event(TransactionCreatedEvent(transaction))
         return transaction
+
+
+account_repository = providers.Dependency(instance_of=AccountRepository)
+account_factory = providers.Singleton(AccountFactory)
