@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class Account(Entity):
+    """Represents an account, registered at a specific bank. An account holds multiple transactions."""
     def __init__(self, account_id, name, bank):
         super().__init__(account_id)
         self.name = name
@@ -55,6 +56,7 @@ class Account(Entity):
         self.transactions.append(transaction)
 
     def get_first_transaction_date(self):
+        """Returns the date of the first transaction on this account."""
         logger.debug("Getting first transaction date for account %s", self)
         if self.transactions:
             transaction = self.transactions[0]
@@ -66,6 +68,7 @@ class Account(Entity):
             return None
 
     def get_last_transaction_date(self):
+        """Returns the date of the last transaction on this account."""
         logger.debug("Getting last transaction date for account %s", self)
         if self.transactions:
             transaction = self.transactions[0]
@@ -90,10 +93,12 @@ class Account(Entity):
             return None
 
     def get_transactions(self):
+        """Returns the complete list of transactions on this account."""
         return copy.copy(self.transactions)
 
 
 class TransactionCategorizedEvent(DomainEvent):
+    """Domain event that indicates that the category of a transaction is updated."""
     def __init__(self, transaction, old_category, new_category):
         self.transaction = transaction
         self.old_category = old_category
@@ -104,6 +109,7 @@ class TransactionCategorizedEvent(DomainEvent):
 
 
 class TransactionSetInternalEvent(DomainEvent):
+    """Domain event that indicates that a transaction has been flagged as 'internal' (i.e. between own accounts)."""
     def __init__(self, transaction, old_internal_flag, new_internal_flag):
         self.transaction = transaction
         self.old_internal = old_internal_flag
@@ -114,6 +120,7 @@ class TransactionSetInternalEvent(DomainEvent):
 
 
 class AccountCreatedEvent(DomainEvent):
+    """Domain event that indicates that a new account has been created."""
     def __init__(self, account):
         self.account = account
 
@@ -122,6 +129,7 @@ class AccountCreatedEvent(DomainEvent):
 
 
 class TransactionCreatedEvent(DomainEvent):
+    """Domain event that indicates that a new transaction has been created."""
     def __init__(self, transaction):
         self.transaction = transaction
 
@@ -130,6 +138,7 @@ class TransactionCreatedEvent(DomainEvent):
 
 
 class Transaction(Entity):
+    """Represents a transaction on a owned account."""
     def __init__(self, transaction_id, account, serial, date, amount, name, description,
                  counter_account, balance_after, internal=False, category=None):
         super().__init__(transaction_id)
@@ -160,16 +169,19 @@ class Transaction(Entity):
             internal=self.internal)
 
     def update_category(self, category):
+        """Updates the category on this transaction."""
         self.register_domain_event(TransactionCategorizedEvent(self, self.category, category))
         self.category = category
 
     def set_internal(self, internal):
+        """Marks this transaction as 'internal' if internal is True, or 'not internal' otherwise."""
         self.register_domain_event(TransactionSetInternalEvent(self, self.internal, internal))
         self.internal = internal
 
 
 class AccountRepository:
-    """Abstract class. Override with specific infrastructure."""
+    """Repository to hold accounts and their transactions.
+    Abstract class. Override with specific infrastructure."""
 
     def get_accounts(self):
         raise NotImplementedError
@@ -192,7 +204,7 @@ class AccountRepository:
 
 class AccountFactory:
     """Factory to create new Account and Transaction entities. Note that the caller is responsible to save the created
-    instances using the AccountRepository."""
+    instances using an AccountRepository."""
 
     @staticmethod
     def create_account(name, bank):

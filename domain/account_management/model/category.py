@@ -4,6 +4,7 @@ from domain.account_management.model import Entity
 
 
 class Category(Entity):
+    """A transaction Category marks"""
     def __init__(self, category_id, name, parent=None):
         super().__init__(category_id)
         self.name = name

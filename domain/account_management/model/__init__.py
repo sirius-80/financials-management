@@ -1,9 +1,19 @@
 class Entity:
+    """Superclass of all Entities (as in Domain Driven Design Entities). Entities may have domain events registered
+    on them. These events need to be published by the infrastructure when the Entity is persisted (e.g. to the
+    database)."""
+
     def __init__(self, entity_id):
         self.id = entity_id
         self._domain_events = []
 
     def register_domain_event(self, event):
+        """Registers (adds) a new domain event on this entity. Domain events will be dispatched by the infrastructure
+        when the entity is persisted.
+
+        See 2-step account_management-event publishing:
+        https://paucls.wordpress.com/2018/05/31/ddd-aggregate-roots-and-domain-events-publication/
+        """
         self._domain_events.append(event)
 
     def flush_domain_events(self):
@@ -26,4 +36,5 @@ class Entity:
 
 
 class DomainEvent:
+    """Common superclass for all domain events."""
     pass
