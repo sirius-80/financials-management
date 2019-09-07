@@ -88,7 +88,7 @@ class Account(Entity):
         if self.transactions:
             transaction = self.transactions[0]
             for t in self.transactions:
-                if transaction.date <= t.date <= date:
+                if transaction.date <= t.date < date:
                     transaction = t
             return transaction
         else:
