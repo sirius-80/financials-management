@@ -115,8 +115,8 @@ def get_category_plot(figure_manager):
 
     def update_transaction_table(selected_category, start_date, end_date):
         logger.debug("Selecting transactions between %s and %s", start_date, end_date)
-        selected_transactions = application.services.get_transactions_for_category_between(start_date, end_date,
-                                                                                           selected_category)
+        selected_transactions = application.services.get_transactions_for_category(start_date, end_date,
+                                                                                   selected_category)
         settings['transactions'] = selected_transactions
         pprint.pprint(selected_transactions)
         data = dict()

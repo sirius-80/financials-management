@@ -27,19 +27,19 @@ def get_combined_amount_for_category_in_month(category, date):
     return float(amount)
 
 
-def get_transactions_between(start_date, end_date):
+def get_transactions(start_date, end_date):
     accounts = account_repository().get_accounts()
     transactions = []
     for account in accounts:
-        transactions.extend(account.get_transactions_between(start_date, end_date))
+        transactions.extend(account.get_transactions(start_date, end_date))
     return transactions
 
 
-def get_transactions_for_category_between(start_date, end_date, category):
+def get_transactions_for_category(start_date, end_date, category):
     accounts = account_repository().get_accounts()
     transactions = []
     for account in accounts:
-        transactions.extend(account.get_transactions_for_category_between(start_date, end_date, category))
+        transactions.extend(account.get_transactions_for_category(start_date, end_date, category))
     return transactions
 
 

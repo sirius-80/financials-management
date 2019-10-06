@@ -23,13 +23,10 @@ class CategoryCache(CategoryRepository):
         return category
 
     def get_categories(self):
-        # logger.debug("Getting categories from cache: %s (size=%d)", self.categories, len(self.categories))
         return self.categories.values()
 
     def get_category_by_qualified_name(self, qualified_name):
-        # logger.debug("Getting category with qualified name %s from cache (%s)", qualified_name, self.categories)
         cached = next(iter(c for c in self.categories.values() if c.qualified_name == qualified_name), None)
-        # logger.debug("Got from cache: %s", cached)
         return cached
 
     def get_category(self, category_id):
@@ -40,7 +37,6 @@ class CategoryCache(CategoryRepository):
             return None
 
     def init_cache(self):
-        # logger.info("Initializing cache...")
         sql = """SELECT * FROM categories"""
 
         def read_category_by_id(category_id):
@@ -75,7 +71,7 @@ class CategoryCache(CategoryRepository):
                     self.save_category(parent)
         except sqlite3.Error as e:
             logger.warning("%s: No data from database: %s", self, e)
-        # logger.info("Cache initialized...")
+        logger.info("Cache initialized...")
 
 
 class DbCategoryRepository(CategoryRepository):

@@ -79,7 +79,7 @@ def set_granularity(granularity):
 def get_profit_loss_data(granularity):
     date_list = application.services.get_transaction_date_range(day_nr=1)
     transactions_per_month = [
-        application.services.get_transactions_between(month, month + dateutil.relativedelta.relativedelta(months=1))
+        application.services.get_transactions(month, month + dateutil.relativedelta.relativedelta(months=1))
         for month in date_list]
     income = []
     expenses = []

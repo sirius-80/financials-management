@@ -32,13 +32,10 @@ class AccountCache(AccountRepository):
                                        for t in stored_account.transactions]
 
     def get_accounts(self):
-        # logger.debug("Getting accounts from cache: %s (size=%d)", self.accounts, len(self.accounts))
         return self.accounts.values()
 
     def get_account_by_name_and_bank(self, name, bank):
-        # logger.debug("Getting account with name %s from cache (%s)", name, self.accounts)
         cached = next(iter(a for a in self.accounts.values() if a.name == name and a.bank == bank), None)
-        # logger.debug("Got from cache: %s", cached)
         return cached
 
     def get_account(self, account_id):
