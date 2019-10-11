@@ -185,5 +185,4 @@ def get_category_plot(figure_manager):
     fig.on_event(Reset, on_pan)
 
     figure_manager.register_figure(fig)
-    update_plot()
     return column(fig, row(inputs, transactions_table, sizing_mode='stretch_width'), sizing_mode='stretch_width')
