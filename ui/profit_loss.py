@@ -92,7 +92,7 @@ def get_profit_loss_data(granularity):
 
     if granularity == ui.FigureManager.TimeUnit.YEAR:
         # Convert to year-data
-        date_list = date_list[6::12]
+        date_list = date_list[0::12]
         expenses_yearly = []
         income_yearly = []
         for year in range(len(date_list)):
@@ -100,9 +100,7 @@ def get_profit_loss_data(granularity):
             income_yearly.append(sum(income[year * 12:min((year + 1) * 12, len(income))]))
         expenses = expenses_yearly
         income = income_yearly
-    else:
-        # Move to half of the month, in order to align vbar chart (meh)
-        date_list = [d + timedelta(days=15) for d in date_list]
+
     profit = []
     loss = []
     for money_in, money_out in zip(income, expenses):

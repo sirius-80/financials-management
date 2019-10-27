@@ -144,12 +144,10 @@ def get_category_plot(figure_manager):
                 if i % 12 == 0:
                     amounts_by_year.append(0)
                 amounts_by_year[i // 12] += data['amount'][i]
-            data['date'] = data['date'][6::12]
+            data['date'] = data['date'][0::12]
             data['amount'] = amounts_by_year
             plot.glyph.width = 300 * 24 * 60 * 60 * 1000
         else:
-            # Move to half of the month, in order to align vbar chart (meh)
-            data['date'] = [d + timedelta(days=15) for d in data['date']]
             plot.glyph.width = 24 * 24 * 60 * 60 * 1000
         fig.y_range.start = min(0, min(data['amount'])) - 0.1 * (max(data['amount']) - min(data['amount']))
         fig.y_range.end = max(data['amount']) + 0.1 * (max(data['amount']) - min(data['amount']))
