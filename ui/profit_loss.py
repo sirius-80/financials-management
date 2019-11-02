@@ -25,7 +25,8 @@ def get_profit_loss_plot(figure_manager):
             ('Income', '@income{(0,0.00}'),
             ('Expenses', '@expenses{(0,0.00}'),
             ('Profit', '@profit{(0,0.00}'),
-            ('Loss', '@loss{(0,0.00}')
+            ('Loss', '@loss{(0,0.00}'),
+            ('Transactions', '@transactions')
         ],
         formatters={
             'date': 'datetime'
@@ -84,22 +85,29 @@ def get_profit_loss_data(granularity):
         for month in date_list]
     income = []
     expenses = []
+    transactions = []
     for transaction_list in transactions_per_month:
+        income_transactions = [t.amount for t in transaction_list if t.amount > 0 and not t.internal]
+        expenses_transactions = [t.amount for t in transaction_list if t.amount < 0 and not t.internal]
         income.append(
-            sum([t.amount for t in transaction_list if t.amount > 0 and not t.internal]))
+            sum(income_transactions))
         expenses.append(
-            sum([t.amount for t in transaction_list if t.amount < 0 and not t.internal]))
+            sum(expenses_transactions))
+        transactions.append(len(income_transactions + expenses_transactions))
 
     if granularity == ui.FigureManager.TimeUnit.YEAR:
         # Convert to year-data
         date_list = date_list[0::12]
         expenses_yearly = []
         income_yearly = []
+        transactions_yearly = []
         for year in range(len(date_list)):
             expenses_yearly.append(sum(expenses[year * 12:min((year + 1) * 12, len(expenses))]))
             income_yearly.append(sum(income[year * 12:min((year + 1) * 12, len(income))]))
+            transactions_yearly.append(sum(transactions[year * 12:min((year + 1) * 12, len(transactions))]))
         expenses = expenses_yearly
         income = income_yearly
+        transactions = transactions_yearly
 
     profit = []
     loss = []
@@ -112,4 +120,5 @@ def get_profit_loss_data(granularity):
             loss.append(profit_loss)
             profit.append(0)
 
-    return {'date': date_list, 'income': income, 'expenses': expenses, 'profit': profit, 'loss': loss}
+    return {'date': date_list, 'income': income, 'expenses': expenses, 'profit': profit, 'loss': loss,
+            'transactions': transactions}

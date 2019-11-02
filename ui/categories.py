@@ -1,3 +1,5 @@
+import calendar
+import datetime
 import logging
 import pprint
 from datetime import timedelta
@@ -21,15 +23,19 @@ def get_category_plot(figure_manager):
     date_list = application.services.get_transaction_date_range()
     category = None
     amounts = [application.services.get_combined_amount_for_category_in_month(category, month) for month in date_list]
+    end_dates = [datetime.date(d.year, d.month, calendar.monthrange(d.year, d.month)[-1]) for d in date_list]
+    transactions = [len(application.services.get_transactions_for_category(dates[0], dates[1], category))
+                    for dates in zip(date_list, end_dates)]
     settings = {'category': category,
                 'granularity': ui.FigureManager.TimeUnit.MONTH,
                 'transactions': []}
 
-    amounts_source = ColumnDataSource(data={'date': date_list, 'amount': amounts})
+    amounts_source = ColumnDataSource(data={'date': date_list, 'amount': amounts, 'transactions': transactions})
     hover = HoverTool(
         tooltips=[
             ('Date', '@date{%F}'),
-            ('Amount', '@amount{(0,0.00}')
+            ('Amount', '@amount{(0,0.00}'),
+            ('Transactions', '@transactions')
         ],
         formatters={
             'date': 'datetime'
@@ -82,6 +88,7 @@ def get_category_plot(figure_manager):
                     logger.info("Updating transaction category %s => %s", transaction, new_category)
                     transaction.update_category(new_category)
                     account_repository().save_transaction(transaction)
+
     transactions_table.source.on_change('data', on_update_category)
 
     def on_selection_event(event):
@@ -134,10 +141,15 @@ def get_category_plot(figure_manager):
     fig.on_event(Tap, on_selection_event)
 
     def update_plot():
+        selected_category = category_repository().get_category_by_qualified_name(settings['category'])
         data = dict()
         data['date'] = application.services.get_transaction_date_range(day_nr=1)
-        data['amount'] = [application.services.get_combined_amount_for_category_in_month(
-            category_repository().get_category_by_qualified_name(settings['category']), month) for month in date_list]
+        data['amount'] = [application.services.get_combined_amount_for_category_in_month(selected_category, month) for
+                          month in date_list]
+        end_dates = [datetime.date(d.year, d.month, calendar.monthrange(d.year, d.month)[-1]) for d in date_list]
+        data['transactions'] = [
+            len(application.services.get_transactions_for_category(dates[0], dates[1], selected_category))
+            for dates in zip(date_list, end_dates)]
         if settings['granularity'] == ui.FigureManager.TimeUnit.YEAR:
             amounts_by_year = []
             for i in range(len(data['amount'])):
@@ -146,6 +158,12 @@ def get_category_plot(figure_manager):
                 amounts_by_year[i // 12] += data['amount'][i]
             data['date'] = data['date'][0::12]
             data['amount'] = amounts_by_year
+            transactions_by_year = []
+            for i in range(len(data['transactions'])):
+                if i % 12 == 0:
+                    transactions_by_year.append(0)
+                transactions_by_year[i // 12] += data['transactions'][i]
+            data['transactions'] = transactions_by_year
             plot.glyph.width = 300 * 24 * 60 * 60 * 1000
         else:
             plot.glyph.width = 24 * 24 * 60 * 60 * 1000
