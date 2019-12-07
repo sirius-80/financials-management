@@ -22,10 +22,10 @@ def get_profit_loss_plot(figure_manager):
     hover = HoverTool(
         tooltips=[
             ('Date', '@date{%F}'),
-            ('Income', '@income{(0,0.00}'),
-            ('Expenses', '@expenses{(0,0.00}'),
-            ('Profit', '@profit{(0,0.00}'),
-            ('Loss', '@loss{(0,0.00}'),
+            ('Income', '@income{(0,0}'),
+            ('Expenses', '@expenses{(0,0}'),
+            ('Profit', '@profit{(0,0}'),
+            ('Loss', '@loss{(0,0}'),
             ('Transactions', '@transactions')
         ],
         formatters={

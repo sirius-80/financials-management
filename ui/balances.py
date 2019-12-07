@@ -4,8 +4,8 @@ from bokeh.events import PanEnd, Reset
 from bokeh.models import ColumnDataSource, HoverTool, Span, NumeralTickFormatter, Title
 from bokeh.plotting import figure
 
-import application.services
 import ui
+import application.services
 
 logger = logging.getLogger(__name__)
 
@@ -14,14 +14,14 @@ def get_balance_plot(figure_manager):
     hover = HoverTool(
         tooltips=[
             ('Date', '@date{%F}'),
-            ('Balance', '@balance{(0,0.00}')
+            ('Balance', '@balance{(0,0}')
         ],
         formatters={
             'date': 'datetime'
         },
         mode='vline'
     )
-    data = get_balance_data()
+    data = get_balance_data(ui.FigureManager.TimeUnit.MONTH)
     source = ColumnDataSource(data=data)
     fig = figure(sizing_mode='stretch_width', plot_height=300, x_axis_type="datetime",
                  tools=[hover, "tap", "box_zoom", "wheel_zoom", "reset", "pan"])
@@ -43,16 +43,27 @@ def get_balance_plot(figure_manager):
     def on_pan(event):
         figure_manager.update_x_range(fig.x_range)
 
+    def update_plot(granularity):
+        source.data = get_balance_data(granularity)
+
     fig.on_event(PanEnd, on_pan)
     fig.on_event(Reset, on_pan)
 
     figure_manager.register_figure(fig)
+    figure_manager.register_granularity_callback(update_plot)
 
     return fig
 
 
-def get_balance_data():
-    date_list = application.services.get_transaction_date_range()
+def get_balance_data(granularity):
+    if granularity == ui.FigureManager.TimeUnit.MONTH:
+        date_list = application.services.get_transaction_date_range()
+    else:
+        date_list = [d for d in application.services.get_transaction_date_range() if d.month == 1]
+        last = application.services.get_transaction_date_range()[-1]
+        if date_list[-1] != last:
+            # last.month = 1
+            date_list.append(last)
     balances = ui.get_balances(date_list)
 
     return {'date': date_list, 'balance': balances}
