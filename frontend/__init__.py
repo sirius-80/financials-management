@@ -1,5 +1,5 @@
-from calendar import calendar
 from datetime import datetime
+import logging
 
 from flask import Flask, request
 from flask_restful import Resource, Api
@@ -8,6 +8,9 @@ from flask_cors import CORS
 
 import application.services
 from domain.account_management.model.category import category_repository
+
+
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app)
@@ -62,20 +65,19 @@ def get_category_data(category_id):
 
 @app.route('/combined_categories/<string:parent_id>')
 def get_combined_category_data_for_period(parent_id=None):
-    start = request.args.get('start', None)
-    if start:
-        print("start: ", start)
-        start_date = datetime.fromtimestamp(int(start))
-    else:
+    try:
+        start = request.args.get('start', None)
+        start_date = datetime.fromtimestamp(int(float(start)/1000)).date()
+    except ValueError:
         start_date = application.services.get_date_of_first_transaction()
 
-    end = request.args.get('end', None)
-    if end:
-        print("end: ", start)
-        end_date = datetime.fromtimestamp(int(end))
-    else:
+    try:
+        end = request.args.get('end', None)
+        end_date = datetime.fromtimestamp(int(float(end)/1000)).date()
+    except ValueError:
         end_date = application.services.get_date_of_last_transaction()
 
+    logger.info("Returning transaction-date from %s to %s", start_date, end_date)
     parent_category = category_repository().get_category(parent_id) or None
 
     if parent_category:
