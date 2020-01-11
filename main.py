@@ -12,6 +12,7 @@ __import__("infrastructure.repositories.category_repository")
 
 import application
 import ui
+import frontend
 
 
 def parse_command_line_arguments():
@@ -60,7 +61,8 @@ def main():
 
     application.log_current_account_info()
 
-    ui.plot_data_with_bokeh(curdoc())
+    # ui.plot_data_with_bokeh(curdoc())
+    frontend.main()
 
 
 main()

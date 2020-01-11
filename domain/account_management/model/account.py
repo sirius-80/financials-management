@@ -26,6 +26,14 @@ class Account(Entity):
             bank=self.bank
         )
 
+    def get_combined_amount_for_category(self, category, date, mode='monthly'):
+        """Returns the combined amount of transactions in the year or month specified by given date."""
+        matched_transactions = [t for t in self.transactions if
+                                (t.date.month == date.month or mode != 'monthly')
+                                and t.date.year == date.year
+                                and (t.category == category or (t.category and t.category.inherits_from(category)))]
+        return sum([t.amount for t in matched_transactions])
+
     def get_combined_amount_for_category_in_month(self, category, date):
         """Returns the combined amount of transactions in the year and month specified by given date."""
         matched_transactions = [t for t in self.transactions if

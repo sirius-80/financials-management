@@ -12,6 +12,10 @@ pypubsub = "*"
 pytest = "*"
 dependency_injector = "*"
 pandas = "*"
+flask = "*"
+flask-jsonpify = "*"
+flask-restful = "*"
+flask-cors = "*"
 
 [requires]
 python_version = "3.6"
