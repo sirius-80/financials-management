@@ -41,7 +41,7 @@ class Category:
 
 @app.route('/categories')
 def get_categories():
-    categories = [Category(0, "None selected")] + [Category(cat.id, cat.qualified_name).__dict__ for cat in
+    categories = [Category(0, "None").__dict__] + [Category(cat.id, cat.qualified_name).__dict__ for cat in
                                           category_repository().get_categories()]
     response = app.response_class(dumps(categories, default=str),
                                   mimetype='application/json')
