@@ -4,9 +4,10 @@ from decimal import Decimal
 
 from attr import dataclass
 from flask import Flask, request
-from flask_restful import Resource, Api
+from flask_restful import Api
 from json import dumps
 from flask_cors import CORS
+from flask_compress import Compress
 
 import application.services
 from domain.account_management.model.category import category_repository
@@ -16,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app)
+Compress(app)
 api = Api(app)
 
 
@@ -40,12 +42,6 @@ class Balance:
 class Category:
     id: str
     name: str
-
-
-# class Category:
-#     def __init__(self, id, name):
-#         self.id = id
-#         self.name = name
 
 
 @dataclass
