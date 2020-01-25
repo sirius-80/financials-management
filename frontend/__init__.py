@@ -10,6 +10,7 @@ from flask_cors import CORS
 
 import application.services
 from domain.account_management.model.category import category_repository
+from domain.account_management.model.account import account_repository
 
 logger = logging.getLogger(__name__)
 
@@ -165,7 +166,8 @@ def get_transactions():
     transactions = application.services.get_transactions(start_date, end_date)
     response = app.response_class(
         response=dumps(
-            [Transaction(t.id, t.date, t.account.name, t.amount, t.name, t.category and Category(t.category.id, t.category.qualified_name).__dict__ or None,
+            [Transaction(t.id, t.date, t.account.name, t.amount, t.name,
+                         t.category and Category(t.category.id, t.category.qualified_name).__dict__ or None,
                          t.description, t.counter_account, t.internal).__dict__
              for t in transactions],
             default=str
@@ -173,6 +175,24 @@ def get_transactions():
         mimetype='application/json'
     )
     return response
+
+
+@app.route('/transactions/<string:transaction_id>/set_category', methods=['PUT'])
+def set_category(transaction_id):
+    category_id = request.json.get('categoryId')
+    category = category_repository().get_category(category_id)
+    transaction = account_repository().get_transaction(transaction_id)
+    logger.info('Setting category of transaction id %s to %s', transaction, category)
+    transaction.update_category(category)
+    # TODO: Fix threading issue!!! account_repository().save_transaction(transaction)
+    return app.response_class(
+        response=dumps(Transaction(transaction.id, transaction.date, transaction.account.name, transaction.amount,
+                                   transaction.name, transaction.category and Category(transaction.category.id,
+                                                                                       transaction.category.qualified_name).__dict__ or None,
+                                   transaction.description, transaction.counter_account,
+                                   transaction.internal).__dict__, default=str),
+        mimetype='application/json'
+    )
 
 
 def main():

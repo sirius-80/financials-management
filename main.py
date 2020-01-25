@@ -3,7 +3,7 @@
 import argparse
 import logging
 
-from bokeh.io import curdoc
+# from bokeh.io import curdoc
 
 # Note that the repository packages need to be imported before anything else, in order for injection of the repository
 # implementations in the domain to work
@@ -11,7 +11,7 @@ __import__("infrastructure.repositories.account_repository")
 __import__("infrastructure.repositories.category_repository")
 
 import application
-import ui
+# import ui
 import frontend
 
 
