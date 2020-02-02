@@ -8,6 +8,7 @@ from flask_restful import Api
 from json import dumps, JSONEncoder
 from flask_cors import CORS
 from flask_compress import Compress
+from werkzeug.exceptions import BadRequest
 
 import application.services
 from domain.account_management.model.category import category_repository
@@ -187,6 +188,18 @@ def get_transactions():
         mimetype='application/json'
     )
     return response
+
+
+@app.route('/upload', methods=['PUT'])
+def upload_csv():
+    csv_text = request.data
+    try:
+        logger.info('Received CSV data')
+        application.import_rabobank_transactions_from_csv(csv_text.decode('utf-8'))
+        return app.response_class()
+    except Exception as e:
+        logger.exception(e)
+        raise BadRequest('Failed to parse data: ' + str(e))
 
 
 @app.route('/transactions/<string:transaction_id>/set_category', methods=['PUT'])

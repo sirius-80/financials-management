@@ -32,6 +32,10 @@ def import_rabobank_transactions(filename_list):
         application.services.data_import.rabobank.import_transactions_from_rabobank_csv(csv, RABOBANK)
 
 
+def import_rabobank_transactions_from_csv(csv_string):
+    application.services.data_import.rabobank.import_transactions_from_rabobank_text(csv_string, RABOBANK)
+
+
 def generate_category(qualified_name):
     if not category_repository().get_category_by_qualified_name(qualified_name):
         category_repository().save_category(category_factory().create_category_from_qualified_name(qualified_name))

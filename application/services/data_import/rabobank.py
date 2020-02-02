@@ -11,40 +11,43 @@ def import_transactions_from_rabobank_csv(filename, bank):
     """Parses given csv-file export from given bank into the database (resulting in accounts and transactions).
     """
     logger.info("Importing %s", filename)
-    with open(filename, encoding="ISO-8859-1") as csv_file:
-        reader = csv.DictReader(csv_file, delimiter=',')
+    with open(filename, encoding="ISO-8859-1") as csv_text:
+        import_transactions_from_rabobank_text(csv_text, bank)
 
-        for row in reader:
-            account_id = row["IBAN/BBAN"]
-            account = _get_or_create_account(account_id, bank)
 
-            date = datetime.datetime.strptime(row["Rentedatum"], "%Y-%m-%d").date()
-            amount = decimal.Decimal(row["Bedrag"].replace(",", "."))
-            name = " ".join(row["Naam tegenpartij"].split())
+def import_transactions_from_rabobank_text(csv_text, bank):
+    reader = csv.DictReader(csv_text, delimiter=',')
+    for row in reader:
+        account_id = row["IBAN/BBAN"]
+        account = _get_or_create_account(account_id, bank)
 
-            description = " ".join(
-                row["Omschrijving-1"].split() + row["Omschrijving-2"].split() + row["Omschrijving-3"].split() + row[
-                    "Betalingskenmerk"].split())
-            serial = int(row["Volgnr"].lstrip("0"))
-            counter_account = row["Tegenrekening IBAN/BBAN"]
-            balance = decimal.Decimal(row["Saldo na trn"].replace(",", "."))
+        date = datetime.datetime.strptime(row["Rentedatum"], "%Y-%m-%d").date()
+        amount = decimal.Decimal(row["Bedrag"].replace(",", "."))
+        name = " ".join(row["Naam tegenpartij"].split())
 
-            # Only create a new transaction if no identical transaction already exists!
-            existing_transactions = services.find_transactions_by_attributes(account, date, serial, amount,
-                                                                             name, counter_account,
-                                                                             description)
-            if existing_transactions:
-                if len(existing_transactions) > 1:
-                    raise ValueError("Database contains duplicate transactions!")
-                else:
-                    logger.debug("Skipping duplicate transaction: %s", existing_transactions[0])
+        description = " ".join(
+            row["Omschrijving-1"].split() + row["Omschrijving-2"].split() + row["Omschrijving-3"].split() + row[
+                "Betalingskenmerk"].split())
+        serial = int(row["Volgnr"].lstrip("0"))
+        counter_account = row["Tegenrekening IBAN/BBAN"]
+        balance = decimal.Decimal(row["Saldo na trn"].replace(",", "."))
+
+        # Only create a new transaction if no identical transaction already exists!
+        existing_transactions = services.find_transactions_by_attributes(account, date, serial, amount,
+                                                                         name, counter_account,
+                                                                         description)
+        if existing_transactions:
+            if len(existing_transactions) > 1:
+                raise ValueError("Database contains duplicate transactions!")
             else:
-                transaction = account_factory().create_transaction(account, date, amount, name, description, serial,
-                                                                   counter_account, balance)
-                account_repository().save_transaction(transaction)
-                account.add_transaction(transaction)
+                logger.debug("Skipping duplicate transaction: %s", existing_transactions[0])
+        else:
+            transaction = account_factory().create_transaction(account, date, amount, name, description, serial,
+                                                               counter_account, balance)
+            account_repository().save_transaction(transaction)
+            account.add_transaction(transaction)
 
-            # mapping.map_transaction(transaction)
+        # mapping.map_transaction(transaction)
 
 
 logger = logging.getLogger(__name__)
