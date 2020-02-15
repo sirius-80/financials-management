@@ -2,16 +2,7 @@
 
 import argparse
 import logging
-
-# from bokeh.io import curdoc
-
-# Note that the repository packages need to be imported before anything else, in order for injection of the repository
-# implementations in the domain to work
-__import__("infrastructure.repositories.account_repository")
-__import__("infrastructure.repositories.category_repository")
-
 import application
-# import ui
 import frontend
 
 
@@ -25,7 +16,6 @@ def parse_command_line_arguments():
     parser.add_argument("-n", "--import-data", action="store_true",
                         help="Import given native csv-file into the database")
     args = parser.parse_args()
-    print(args)
     return args
 
 
@@ -35,8 +25,8 @@ def main():
     logger = logging.getLogger(__name__)
 
     args = parse_command_line_arguments()
-
     if args.import_data:
+        application.initialize_application()
         account_file = "accounts.csv"
         category_file = "categories.csv"
         transaction_file = "transactions.csv"
@@ -45,6 +35,7 @@ def main():
         return
 
     if args.export_data:
+        application.initialize_application()
         account_file = "accounts.csv"
         category_file = "categories.csv"
         transaction_file = "transactions.csv"
@@ -52,16 +43,12 @@ def main():
         application.export_native_data(account_file, transaction_file, category_file)
         return
 
-    application.initialize_application()
-
     if args.import_rabobank_csv:
+        application.initialize_application()
         logger.info("Importing rabobank csv-file: %s", args.import_rabobank_csv)
         application.import_rabobank_transactions([args.import_rabobank_csv])
         return
 
-    application.log_current_account_info()
-
-    # ui.plot_data_with_bokeh(curdoc())
     frontend.main()
 
 

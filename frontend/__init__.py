@@ -221,5 +221,10 @@ def set_category(transaction_id):
     )
 
 
+@app.before_first_request
+def init():
+    application.initialize_application()
+
+
 def main():
-    app.run(port='5002')
+    app.run(port='5002', debug=True)

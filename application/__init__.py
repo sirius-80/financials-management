@@ -6,6 +6,9 @@ import application.services.afas
 import application.services.data_export.native
 import application.services.data_import.native
 import application.services.data_import.rabobank
+import infrastructure.repositories
+import infrastructure.repositories.account_repository
+import infrastructure.repositories.category_repository
 from application.services.transaction_mapping import CategoryCleanupTransactionMapper, map_transaction, \
     InternalTransactionsMapper, MyInternalTransactionDetector
 from domain.account_management.model.account import account_repository
@@ -77,15 +80,10 @@ def on_transaction_created_event(event):
     flag_internal_transaction(event.transaction, internal_transactions_detector)
 
 
-def log_current_account_info():
-    logger.debug("accounts: %s", account_repository().get_accounts())
-    for account in account_repository().get_accounts():
-        last_date = account.get_last_transaction_date()
-        logger.warning("Account: %s (%s): %s => € %8s", account.name, account.id, last_date,
-                       account.get_balance_at(last_date))
-
-
 def initialize_application():
+    infrastructure.repositories.init()
+    infrastructure.repositories.account_repository.init()
+    infrastructure.repositories.category_repository.init()
     pubsub.pub.subscribe(on_transaction_categorized_event, "TransactionCategorizedEvent")
     pubsub.pub.subscribe(on_transaction_created_event, "TransactionCreatedEvent")
     if not category_repository().get_categories():

@@ -3,8 +3,9 @@ import sqlite3
 
 from dependency_injector import providers
 
+from domain import Blackboard
 from domain.account_management.model.category import CategoryRepository, Category, category_repository
-from infrastructure.repositories import database
+from infrastructure.repositories import blackboard
 
 logger = logging.getLogger(__name__)
 
@@ -117,7 +118,8 @@ class DbCategoryRepository(CategoryRepository):
         self.db.connection.commit()
 
 
-category_cache = providers.Singleton(CategoryCache, db=database)
-logger.info("Providing CategoryRepository dependency")
-category_repository.provided_by(
-    providers.Singleton(DbCategoryRepository, db=database, cache=category_cache))
+def init():
+    blackboard.category_cache = providers.Singleton(CategoryCache, db=blackboard.database)
+    logger.info("Providing CategoryRepository dependency")
+    category_repository.provided_by(
+        providers.Singleton(DbCategoryRepository, db=blackboard.database, cache=blackboard.category_cache))

@@ -17,6 +17,7 @@ flask-jsonpify = "*"
 flask-restful = "*"
 flask-cors = "*"
 flask-compress = "*"
+sqlalchemy = "*"
 
 [requires]
 python_version = "3.6"

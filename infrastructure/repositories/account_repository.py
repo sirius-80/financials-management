@@ -4,7 +4,7 @@ from dependency_injector import providers
 
 from domain.account_management.model.account import AccountRepository, Account, Transaction, account_repository
 from domain.account_management.model.category import category_repository
-from infrastructure.repositories import database
+from infrastructure.repositories import blackboard
 from infrastructure.services import publish_domain_events
 
 logger = logging.getLogger(__name__)
@@ -207,6 +207,7 @@ class DbAccountRepository(AccountRepository):
         self.db.connection.commit()
 
 
-account_cache = providers.Singleton(AccountCache, db=database)
-account_repository.provided_by(
-    providers.Singleton(DbAccountRepository, db=database, cache=account_cache))
+def init():
+    blackboard.account_cache = providers.Singleton(AccountCache, db=blackboard.database)
+    account_repository.provided_by(
+        providers.Singleton(DbAccountRepository, db=blackboard.database, cache=blackboard.account_cache))
