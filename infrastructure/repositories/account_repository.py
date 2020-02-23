@@ -1,5 +1,6 @@
 import logging
-
+from datetime import datetime
+import sqlalchemy
 from dependency_injector import providers
 
 from domain.account_management.model.account import AccountRepository, Account, Transaction, account_repository
@@ -61,7 +62,8 @@ class AccountCache(AccountRepository):
             logger.debug("Fetching transactions for account %s", account)
             for trow in self.db.query("SELECT * FROM transactions WHERE account = ?", (account.id,)):
                 category = category_repository().get_category(trow["category"])
-                transaction = Transaction(trow["id"], account, trow["serial"], trow["date"],
+                date = datetime.strptime(trow["date"], '%Y-%m-%d').date()
+                transaction = Transaction(trow["id"], account, trow["serial"], date,
                                           trow["amount"], trow["name"], trow["description"], trow["counter_account"],
                                           trow["balance_after"], trow["internal"], category)
                 self.save_transaction(transaction)
@@ -82,41 +84,38 @@ class DbAccountRepository(AccountRepository):
         self._cache.init_cache()
 
     def save_account(self, account):
-        cursor = self.db.connection.cursor()
         if self.get_account(account.id):
-            cursor.execute("UPDATE accounts SET name=?, bank=? WHERE id=?",
-                           (account.name, account.bank, account.id))
+            statement = self.db_accounts.update().where(self.db_accounts.id == account.id).values(name=account.c.name,
+                                                                                                  bank=account.c.bank)
+            self.db.connection.execute(statement)
         else:
-            cursor.execute("INSERT INTO accounts (id, name, bank) VALUES (?,?,?)",
-                           (account.id, account.name, account.bank))
+            statement = self.db_accounts.insert().values(id=account.id, name=account.name, bank=account.bank)
+            self.db.connection.execute(statement)
         if self._cache:
             self._cache.save_account(account)
         publish_domain_events(account.flush_domain_events())
 
     def save_transaction(self, transaction):
-        cursor = self.db.connection.cursor()
         if self.get_transaction(transaction.id):
-            cursor.execute(
-                "UPDATE transactions SET amount=?, date=?, name=?, description=?, balance_after=?, "
-                "serial=?, counter_account=?, account=?, internal=?, category=? "
-                "WHERE id=? ",
-                (transaction.amount, transaction.date, transaction.name, transaction.description,
-                 transaction.balance_after, transaction.serial, transaction.counter_account, transaction.account.id,
-                 transaction.internal, transaction.category and transaction.category.id or None, transaction.id))
+            statement = self.db_transactions.update().where(self.db_transactions.c.id == transaction.id).values(
+                amount=transaction.amount, date=transaction.date, name=transaction.name,
+                description=transaction.description, balance_after=transaction.balance_after, serial=transaction.serial,
+                counter_account=transaction.counter_account, account=transaction.account.id,
+                internal=transaction.internal, category=transaction.category and transaction.category.id or None
+            )
+            self.db.connection.execute(statement)
         else:
-            cursor.execute(
-                "INSERT INTO transactions (id, amount, date, name, description, balance_after, serial,"
-                "counter_account, account, internal, category)"
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                (transaction.id, transaction.amount, transaction.date, transaction.name,
-                 transaction.description, transaction.balance_after, transaction.serial,
-                 transaction.counter_account, transaction.account.id,
-                 transaction.internal, transaction.category and transaction.category.id or None))
+            statement = self.db_transactions.insert().values(
+                id=transaction.id, amount=transaction.amount, date=transaction.date, name=transaction.name,
+                description=transaction.description, balance_after=transaction.balance_after, serial=transaction.serial,
+                counter_account=transaction.counter_account, account=transaction.account.id,
+                internal=transaction.internal, category=transaction.category and transaction.category.id or None
+            )
+            self.db.connection.execute(statement)
         if self._cache:
             self._cache.save_transaction(transaction)
 
         publish_domain_events(transaction.flush_domain_events())
-        self.db.connection.commit()
         return transaction
 
     def get_accounts(self):
@@ -181,30 +180,35 @@ class DbAccountRepository(AccountRepository):
         return account
 
     def _create_tables(self):
-        sql_create_accounts_table = """CREATE TABLE IF NOT EXISTS accounts (
-                                        id text PRIMARY KEY,
-                                        name text NOT NULL,
-                                        bank text NOT NULL
-                                        );"""
-        sql_create_transactions_table = """CREATE TABLE IF NOT EXISTS transactions (
-                                            id text PRIMARY KEY,
-                                            amount decimal NOT NULL,
-                                            date date NOT NULL,
-                                            name text NOT NULL,
-                                            description text NOT NULL,
-                                            balance_after decimal NOT NULL,
-                                            serial integer,
-                                            counter_account text,
-                                            account integer NOT NULL,
-                                            internal boolean,
-                                            category text,
-                                            FOREIGN KEY (account) REFERENCES accounts (id),
-                                            FOREIGN KEY (category) REFERENCES categories (id)
-                                            );"""
-        cursor = self.db.connection.cursor()
-        cursor.execute(sql_create_accounts_table)
-        cursor.execute(sql_create_transactions_table)
-        self.db.connection.commit()
+        meta = self.db.meta
+        if self.db.get_engine().dialect.has_table(self.db.get_engine(), 'accounts'):
+            self.db_accounts = sqlalchemy.Table('accounts', meta, autoload=True, autoload_with=self.db.get_engine())
+            logger.info("%s", self.db_accounts.select())
+        else:
+            self.db_accounts = sqlalchemy.Table('accounts', meta,
+                                                sqlalchemy.Column('id', sqlalchemy.Text, primary_key=True),
+                                                sqlalchemy.Column('name', sqlalchemy.Text, nullable=False),
+                                                sqlalchemy.Column('bank', sqlalchemy.Text, nullable=False))
+        if self.db.get_engine().dialect.has_table(self.db.get_engine(), 'transactions'):
+            self.db_transactions = sqlalchemy.Table('transactions', meta, autoload=True, autoload_with=self.db.get_engine())
+        else:
+            self.db_transactions = sqlalchemy.Table('transactions', meta,
+                                                    sqlalchemy.Column('id', sqlalchemy.Text, primary_key=True),
+                                                    sqlalchemy.Column('amount', sqlalchemy.Numeric(15, 2), nullable=False),
+                                                    sqlalchemy.Column('date', sqlalchemy.DateTime, nullable=False),
+                                                    sqlalchemy.Column('name', sqlalchemy.Text, nullable=False),
+                                                    sqlalchemy.Column('description', sqlalchemy.Text, nullable=False),
+                                                    sqlalchemy.Column('balance_after', sqlalchemy.Numeric(15, 2),
+                                                                      nullable=False),
+                                                    sqlalchemy.Column('serial', sqlalchemy.Integer),
+                                                    sqlalchemy.Column('counter_account', sqlalchemy.Text),
+                                                    sqlalchemy.Column('account', sqlalchemy.Integer,
+                                                                      sqlalchemy.ForeignKey('accounts.id'), nullable=False),
+                                                    sqlalchemy.Column('internal', sqlalchemy.Boolean),
+                                                    sqlalchemy.Column('category', sqlalchemy.Text,
+                                                                      sqlalchemy.ForeignKey('categories.id'))
+                                                    )
+        meta.create_all(self.db.get_engine())
 
 
 def init():

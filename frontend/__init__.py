@@ -176,6 +176,7 @@ def get_transactions():
     except (ValueError, TypeError):
         end_date = application.services.get_date_of_last_transaction()
 
+    logger.info("fetching transactions from %s to %s", start_date, end_date)
     transactions = application.services.get_transactions(start_date, end_date)
     response = app.response_class(
         response=dumps(

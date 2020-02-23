@@ -2,6 +2,7 @@ import csv
 import datetime
 import decimal
 import logging
+import io
 
 from domain.account_management import services
 from domain.account_management.model.account import account_repository, account_factory
@@ -16,8 +17,11 @@ def import_transactions_from_rabobank_csv(filename, bank):
 
 
 def import_transactions_from_rabobank_text(csv_text, bank):
-    reader = csv.DictReader(csv_text, delimiter=',')
+    logger.info("Parsing csv: '%s'", csv_text)
+    reader = csv.DictReader(io.StringIO(csv_text), delimiter=',', doublequote=True)
+    logger.info("Fieldnames: %s", reader.fieldnames)
     for row in reader:
+        logger.info("parsing row: %s", row)
         account_id = row["IBAN/BBAN"]
         account = _get_or_create_account(account_id, bank)
 
