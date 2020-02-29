@@ -23,6 +23,7 @@ def main():
     logging.basicConfig(format='%(asctime)-15s %(levelname)-7s [%(name)s] %(message)s')
     logging.getLogger("").setLevel(logging.INFO)
     logger = logging.getLogger(__name__)
+    logger.info("Starting application")
 
     args = parse_command_line_arguments()
     if args.import_data:
