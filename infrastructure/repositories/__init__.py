@@ -1,9 +1,8 @@
 import decimal
 import logging
 import sqlite3
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, MetaData
 from dependency_injector import providers
-
 from domain import Blackboard
 
 logger = logging.getLogger(__name__)
@@ -50,7 +49,9 @@ class DatabaseSqlite3:
 
 class Database:
     def __init__(self):
-        self.engine = create_engine("sqlite:///bank-sqlite3.db")
+        self.engine = create_engine("sqlite:///bank-sqlite3.db?"
+                                    "check_same_thread=false")
+        self.meta = MetaData()
         self.connection = self.engine.connect()
 
     def close(self):
@@ -64,12 +65,14 @@ class Database:
         result = self.connection.execute(query, parameters)
         return next(result)
 
+    def get_engine(self):
+        return self.engine
+
 
 blackboard = Blackboard()
 
 
 def init():
     logger.info("init %s", __file__)
-    # blackboard.database = providers.Singleton(DatabaseSqlite3)
     blackboard.database = providers.Singleton(Database)
 
