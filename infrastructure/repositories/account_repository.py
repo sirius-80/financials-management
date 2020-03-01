@@ -79,6 +79,7 @@ class DbAccountRepository(AccountRepository):
     """
 
     def __init__(self, db, cache):
+        logger.info("Creating %s", self.__class__)
         self.db = db
         self._cache = cache
         self._create_tables()
