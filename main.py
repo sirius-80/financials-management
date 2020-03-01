@@ -2,6 +2,8 @@
 
 import argparse
 import logging
+import os
+
 import application
 import frontend
 
@@ -13,8 +15,8 @@ def parse_command_line_arguments():
                         help="Import given Rabobank csv-file into the database")
     parser.add_argument("-e", "--export-data", action="store_true",
                         help="Export database contents to accounts.csv, categories.csv and transactions.csv")
-    parser.add_argument("-n", "--import-data", action="store_true",
-                        help="Import given native csv-file into the database")
+    parser.add_argument("-n", "--import-data", type=str, metavar="native-directory",
+                        help="Import native csv-files from given directory into the database")
     args = parser.parse_args()
     return args
 
@@ -36,9 +38,9 @@ def main():
 
     if args.export_data:
         application.initialize_application()
-        account_file = "accounts.csv"
-        category_file = "categories.csv"
-        transaction_file = "transactions.csv"
+        account_file = os.path.join(args.native_directory, "accounts.csv")
+        category_file = os.path.join(args.native_directory, "categories.csv")
+        transaction_file = os.path.join(args.native_directory, "transactions.csv")
         logger.info("Exporting data to %s, %s and %s", account_file, transaction_file, category_file)
         application.export_native_data(account_file, transaction_file, category_file)
         return

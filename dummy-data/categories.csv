@@ -1,0 +1,43 @@
+category_id,qualified_name
+a372df5d5a654067a35063fc8325af62,Income
+520bdc64abf840e4b543a4eb7ff09770,Income::Salary
+ec10c5a7a072482bbe6dbf85a26e9133,Expenses
+8638f48971c545bab36ce8d75bfbc4e5,Expenses::House
+126c51c196f249eba34f0f0dd04abc0f,Expenses::House::Mortgage
+f1c0fde279344734aa0394c5469dacaa,Expenses::House::Maintenance
+ba4e4d0518464428baaebce375f94f56,Expenses::Household
+ad6275d20b6c4afeb8663f1a601e3e23,Expenses::Household::Groceries
+4d838f0b69c54dd89efd7daea5530363,Expenses::Household::Personal care
+9fabce6d29dc403ea4c72d9a24ccba21,Expenses::Household::Pets
+4103768e1dc0409bbf37f30581dad963,Expenses::Transportation
+9e45e0ed17c4463b8710f2d9ed275f67,Expenses::Transportation::Purchase
+159dfc4a2bb1462ebde0230917003107,Expenses::Transportation::Fuel
+c007c4fceae547a79b07d1b5be155ed3,Expenses::Transportation::Maintenance
+79d3db9a245548ef85f58b3d055eff19,Expenses::Transportation::Taxes
+45a550220a294ba583a694dbdf6ece94,Expenses::Transportation::Parking
+c9c3603aa5e34a9991247056c06b9d02,Expenses::Transportation::Public transportation
+a58f1bd1661842cea648d3fafef380bd,Expenses::Transportation::Insurance
+1669635f4ae444f0a6bc0526b4deec96,Expenses::Medical
+ebe117188dd441ca92eae69a35370cc8,Expenses::Medical::Health insurance
+38fc3c8bb1804922b2de57876b60f783,Expenses::Medical::Medicines
+56e0e5c5f7d24b67af9a506d66136608,Expenses::Medical::Dentist
+e8e6bdbdd19e4ea2b69da82d84a48ba3,Expenses::Leisure
+5993efaf87d241eaa37f6f162476cdfc,Expenses::Leisure::Dining out
+e5515beadce244fda374bca51b66875c,Expenses::Leisure::Vacation
+60478e2a4a6f427cb38d481bdb66db9f,Expenses::Leisure::Hobbies
+a7ccdf9ac1544f009a5c66947468c938,Expenses::Miscellaneous
+9da7bdce521e4dbeb81de33593eac173,Expenses::Miscellaneous::Charity
+fa521aad8ad1413b9a6b9bebe3aa0585,Expenses::Miscellaneous::Fines
+16429e255c8344eebeb3f08d6c3f6041,Expenses::Clothes
+8b31022fbe464ffdb8cc3f0dc4a8bddd,Expenses::Insurance
+fa44582fd35d4bd89782f088b4e807ac,Expenses::Insurance::Life insurance
+8223aa0e428449a0996f067f1d5790f3,Expenses::Insurance::Other Insurances
+1e288a3b9f1a4412a191770110f8598c,Expenses::Education
+951c139a9e05480f89a768904d182c3a,Expenses::Education::Books
+bc3e81e7dacc4de59d64b718a54d97ad,Expenses::Education::Tuition fee
+75ed55794422448e831d63cead227777,Expenses::Telecom
+c6ef0f0824724fffbc8e033242f8f42e,Expenses::Telecom::Internet
+992e5699d8f0480ba9e14514c598a279,Expenses::Telecom::Mobile phone
+09fbd593ead943b5b19fbcffdb3062e2,Expenses::Uncategorized
+a97a3449ca124f70a7a9b2dd012ddabc,Expenses::Uncategorized::To be classified
+28e3e339a83d47df9e9732534ed23e7b,Transfers

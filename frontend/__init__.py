@@ -210,6 +210,7 @@ def set_category(transaction_id):
     transaction = account_repository().get_transaction(transaction_id)
     logger.info('Setting category of transaction id %s to %s', transaction, category)
     transaction.update_category(category)
+    account_repository().save_transaction(transaction)
     # TODO: Fix threading issue!!! account_repository().save_transaction(transaction)
     return app.response_class(
         response=dumps(Transaction(transaction.id, transaction.date, transaction.account.name, transaction.amount,

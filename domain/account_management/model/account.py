@@ -45,7 +45,10 @@ class Account(Entity):
     def get_balance_at(self, date):
         """Returns the account balance at given date."""
         transaction = self._get_last_transaction_at_or_before(date)
-        return transaction.balance_after
+        if transaction:
+            return transaction.balance_after
+        else:
+            return 0
 
     def get_transactions(self, start_date=None, end_date=None):
         """Returns the list of transactions of given category that falls after given start_date (inclusive) and before

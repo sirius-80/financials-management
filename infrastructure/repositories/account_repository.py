@@ -62,7 +62,8 @@ class AccountCache(AccountRepository):
             logger.debug("Fetching transactions for account %s", account)
             for trow in self.db.query("SELECT * FROM transactions WHERE account = ?", (account.id,)):
                 category = category_repository().get_category(trow["category"])
-                date = datetime.strptime(trow["date"], '%Y-%m-%d').date()
+                date_str = trow["date"].split(" ")[0] # strip trailing characters (if any)
+                date = datetime.strptime(date_str, '%Y-%m-%d').date()
                 transaction = Transaction(trow["id"], account, trow["serial"], date,
                                           trow["amount"], trow["name"], trow["description"], trow["counter_account"],
                                           trow["balance_after"], trow["internal"], category)
@@ -190,12 +191,14 @@ class DbAccountRepository(AccountRepository):
                                                 sqlalchemy.Column('name', sqlalchemy.Text, nullable=False),
                                                 sqlalchemy.Column('bank', sqlalchemy.Text, nullable=False))
         if self.db.get_engine().dialect.has_table(self.db.get_engine(), 'transactions'):
-            self.db_transactions = sqlalchemy.Table('transactions', meta, autoload=True, autoload_with=self.db.get_engine())
+            self.db_transactions = sqlalchemy.Table('transactions', meta, autoload=True,
+                                                    autoload_with=self.db.get_engine())
         else:
             self.db_transactions = sqlalchemy.Table('transactions', meta,
                                                     sqlalchemy.Column('id', sqlalchemy.Text, primary_key=True),
-                                                    sqlalchemy.Column('amount', sqlalchemy.Numeric(15, 2), nullable=False),
-                                                    sqlalchemy.Column('date', sqlalchemy.DateTime, nullable=False),
+                                                    sqlalchemy.Column('amount', sqlalchemy.Numeric(15, 2),
+                                                                      nullable=False),
+                                                    sqlalchemy.Column('date', sqlalchemy.Date, nullable=False),
                                                     sqlalchemy.Column('name', sqlalchemy.Text, nullable=False),
                                                     sqlalchemy.Column('description', sqlalchemy.Text, nullable=False),
                                                     sqlalchemy.Column('balance_after', sqlalchemy.Numeric(15, 2),
@@ -203,7 +206,8 @@ class DbAccountRepository(AccountRepository):
                                                     sqlalchemy.Column('serial', sqlalchemy.Integer),
                                                     sqlalchemy.Column('counter_account', sqlalchemy.Text),
                                                     sqlalchemy.Column('account', sqlalchemy.Integer,
-                                                                      sqlalchemy.ForeignKey('accounts.id'), nullable=False),
+                                                                      sqlalchemy.ForeignKey('accounts.id'),
+                                                                      nullable=False),
                                                     sqlalchemy.Column('internal', sqlalchemy.Boolean),
                                                     sqlalchemy.Column('category', sqlalchemy.Text,
                                                                       sqlalchemy.ForeignKey('categories.id'))

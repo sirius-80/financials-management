@@ -64,7 +64,7 @@ def get_date_of_first_transaction():
     first_date = datetime.date.today()
     for account in accounts:
         account_date = account.get_first_transaction_date()
-        if account_date < first_date:
+        if account_date and account_date < first_date:
             first_date = account_date
     return first_date
 
@@ -75,7 +75,7 @@ def get_date_of_last_transaction():
     last_date = datetime.date.today()
     for account in accounts:
         account_date = account.get_last_transaction_date()
-        if account_date > last_date:
+        if account_date and account_date > last_date:
             last_date = account_date
     return last_date
 
