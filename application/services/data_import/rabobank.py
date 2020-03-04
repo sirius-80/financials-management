@@ -17,11 +17,11 @@ def import_transactions_from_rabobank_csv(filename, bank):
 
 
 def import_transactions_from_rabobank_text(csv_text, bank):
-    logger.info("Parsing csv: '%s'", csv_text)
-    reader = csv.DictReader(io.StringIO(csv_text), delimiter=',', doublequote=True)
+    logger.info("Parsing csv: '%s'", dir(csv_text))
+    reader = csv.DictReader(csv_text, delimiter=',', doublequote=True)
     logger.info("Fieldnames: %s", reader.fieldnames)
     for row in reader:
-        logger.info("parsing row: %s", row)
+        logger.debug("parsing row: %s", row)
         account_id = row["IBAN/BBAN"]
         account = _get_or_create_account(account_id, bank)
 
@@ -44,10 +44,11 @@ def import_transactions_from_rabobank_text(csv_text, bank):
             if len(existing_transactions) > 1:
                 raise ValueError("Database contains duplicate transactions!")
             else:
-                logger.debug("Skipping duplicate transaction: %s", existing_transactions[0])
+                logger.info("Skipping duplicate transaction: %s", existing_transactions[0])
         else:
             transaction = account_factory().create_transaction(account, date, amount, name, description, serial,
                                                                counter_account, balance)
+            logger.info("Adding new transaction: %s", transaction)
             account_repository().save_transaction(transaction)
             account.add_transaction(transaction)
 

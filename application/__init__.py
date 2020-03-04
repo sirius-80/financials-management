@@ -1,3 +1,4 @@
+import io
 import logging
 
 import pubsub.pub
@@ -36,7 +37,7 @@ def import_rabobank_transactions(filename_list):
 
 
 def import_rabobank_transactions_from_csv(csv_string):
-    application.services.data_import.rabobank.import_transactions_from_rabobank_text(csv_string, RABOBANK)
+    application.services.data_import.rabobank.import_transactions_from_rabobank_text(io.StringIO(csv_string), RABOBANK)
 
 
 def generate_category(qualified_name):

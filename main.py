@@ -30,9 +30,9 @@ def main():
     args = parse_command_line_arguments()
     if args.import_data:
         application.initialize_application()
-        account_file = "accounts.csv"
-        category_file = "categories.csv"
-        transaction_file = "transactions.csv"
+        account_file = os.path.join(args.native_directory, "accounts.csv")
+        category_file = os.path.join(args.native_directory, "categories.csv")
+        transaction_file = os.path.join(args.native_directory, "transactions.csv")
         logger.info("Importing native csv-files: %s, %s and %s", account_file, category_file, transaction_file)
         application.import_native_data(account_file, transaction_file, category_file)
         return
