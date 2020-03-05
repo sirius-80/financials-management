@@ -153,6 +153,7 @@ class Configuration:
 
 
 class Services(containers.DeclarativeContainer):
+    logger.debug('Registering transaction mappers')
     config = providers.Factory(Configuration)
     afas_mapper = providers.Singleton(afas.AfasTransactionCategoryMapper, config=config)
     cleanup_mapper = providers.Singleton(transaction_mapping.CategoryCleanupTransactionMapper)
