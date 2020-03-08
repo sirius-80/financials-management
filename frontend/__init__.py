@@ -124,7 +124,7 @@ def get_combined_category_data_for_period(parent_id=None):
         cat_data = {
             'name': cat.name,
             'value': abs(float(sum(
-                [t.amount for t in application.services.get_transactions_for_category(start_date, end_date, cat)])))}
+                [float(t.amount) for t in application.services.get_transactions_for_category(start_date, end_date, cat)])))}
 
         if cat.children:
             cat_data['children'] = []
