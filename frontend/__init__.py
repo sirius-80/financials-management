@@ -8,6 +8,7 @@ from flask_restful import Api
 from json import dumps, JSONEncoder
 from flask_cors import CORS
 from flask_compress import Compress
+from werkzeug.exceptions import BadRequest
 
 import application.services
 from domain.account_management.model.category import category_repository
@@ -123,7 +124,7 @@ def get_combined_category_data_for_period(parent_id=None):
         cat_data = {
             'name': cat.name,
             'value': abs(float(sum(
-                [t.amount for t in application.services.get_transactions_for_category(start_date, end_date, cat)])))}
+                [float(t.amount) for t in application.services.get_transactions_for_category(start_date, end_date, cat)])))}
 
         if cat.children:
             cat_data['children'] = []
@@ -175,6 +176,7 @@ def get_transactions():
     except (ValueError, TypeError):
         end_date = application.services.get_date_of_last_transaction()
 
+    logger.info("fetching transactions from %s to %s", start_date, end_date)
     transactions = application.services.get_transactions(start_date, end_date)
     response = app.response_class(
         response=dumps(
@@ -189,6 +191,18 @@ def get_transactions():
     return response
 
 
+@app.route('/upload', methods=['PUT'])
+def upload_csv():
+    csv_text = request.data
+    try:
+        logger.info('Received CSV data')
+        application.import_rabobank_transactions_from_csv(csv_text.decode('utf-8'))
+        return app.response_class()
+    except Exception as e:
+        logger.exception(e)
+        raise BadRequest('Failed to parse data: ' + str(e))
+
+
 @app.route('/transactions/<string:transaction_id>/set_category', methods=['PUT'])
 def set_category(transaction_id):
     category_id = request.json.get('categoryId')
@@ -196,6 +210,7 @@ def set_category(transaction_id):
     transaction = account_repository().get_transaction(transaction_id)
     logger.info('Setting category of transaction id %s to %s', transaction, category)
     transaction.update_category(category)
+    account_repository().save_transaction(transaction)
     # TODO: Fix threading issue!!! account_repository().save_transaction(transaction)
     return app.response_class(
         response=dumps(Transaction(transaction.id, transaction.date, transaction.account.name, transaction.amount,
@@ -208,5 +223,10 @@ def set_category(transaction_id):
     )
 
 
+@app.before_first_request
+def init():
+    application.initialize_application()
+
+
 def main():
-    app.run(port='5002')
+    app.run(host='0.0.0.0', port='5002', debug=True)

@@ -3,7 +3,7 @@ def find_transactions_by_attributes(account, date, serial, amount, name, counter
     return [t for t in account.get_transactions() if
             t.date == date
             and t.serial == serial
-            and t.amount == amount
+            and float(t.amount) == float(amount) # TODO: Temporary fix for problematic decimal comparison
             and t.name == name
             and t.counter_account == counter_account
             and t.description == description]
