@@ -1,0 +1,42 @@
+Income
+Income::Salary
+Expenses
+Expenses::House
+Expenses::House::Mortgage
+Expenses::House::Maintenance
+Expenses::Household
+Expenses::Household::Groceries
+Expenses::Household::Personal care
+Expenses::Household::Pets
+Expenses::Transportation
+Expenses::Transportation::Purchase
+Expenses::Transportation::Fuel
+Expenses::Transportation::Maintenance
+Expenses::Transportation::Taxes
+Expenses::Transportation::Parking
+Expenses::Transportation::Public transportation
+Expenses::Transportation::Insurance
+Expenses::Medical
+Expenses::Medical::Health insurance
+Expenses::Medical::Medicines
+Expenses::Medical::Dentist
+Expenses::Leisure
+Expenses::Leisure::Dining out
+Expenses::Leisure::Vacation
+Expenses::Leisure::Hobbies
+Expenses::Miscellaneous
+Expenses::Miscellaneous::Charity
+Expenses::Miscellaneous::Fines
+Expenses::Clothes
+Expenses::Insurance
+Expenses::Insurance::Life insurance
+Expenses::Insurance::Other Insurances
+Expenses::Education
+Expenses::Education::Books
+Expenses::Education::Tuition fee
+Expenses::Telecom
+Expenses::Telecom::Internet
+Expenses::Telecom::Mobile phone
+Expenses::Uncategorized
+Expenses::Uncategorized::To be classified
+Transfers
