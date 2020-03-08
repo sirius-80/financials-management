@@ -1,10 +1,9 @@
 import logging
 import sqlite3
-
+import sqlalchemy
 from dependency_injector import providers
-
 from domain.account_management.model.category import CategoryRepository, Category, category_repository
-from infrastructure.repositories import database
+from infrastructure.repositories import blackboard
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +75,7 @@ class CategoryCache(CategoryRepository):
 
 class DbCategoryRepository(CategoryRepository):
     def __init__(self, db, cache):
+        logger.info("Creating %s", self.__class__)
         self.db = db
         self._cache = cache
         self._create_tables()
@@ -91,33 +91,35 @@ class DbCategoryRepository(CategoryRepository):
     def get_categories(self):
         return self._cache.get_categories()
 
-    def save_category(self, category):
+    def save_category(self, category, session=None):
         logger.debug("%s: update_category(%s (id=%s))", self, category, category.id)
-        cursor = self.db.connection.cursor()
         if not self.get_category_by_qualified_name(category.qualified_name):
             logger.debug("%s: Creating new database entry %s (id=%s)", self, category, category.id)
-            cursor.execute("INSERT INTO categories (id, name, parent) VALUES (?, ?, ?)",
-                           (category.id, category.name, category.parent and category.parent.id or None))
+            statement = self.db_categories.insert().values(id=category.id, name=category.name,
+                                               parent=category.parent and category.parent.id or None).execution_options(autocommit=True)
+            self.db.connection.execute(statement)
         if category.parent and not self.get_category_by_qualified_name(category.parent.qualified_name):
             if category not in category.parent.children:
                 category.parent.children.append(category)
             self.save_category(category.parent)
 
         self._cache.save_category(category)
-        self.db.connection.commit()
 
     def _create_tables(self):
-        sql_create_categories_table = """CREATE TABLE IF NOT EXISTS categories (
-                                            id text PRIMARY KEY,
-                                            name text NOT NULL,
-                                            parent text,
-                                            FOREIGN KEY (parent) REFERENCES categories (id)
-                                            );"""
-        self.db.connection.cursor().execute(sql_create_categories_table)
-        self.db.connection.commit()
+        meta = self.db.meta
+        if self.db.get_engine().dialect.has_table(self.db.get_engine(), 'categories'):
+            self.db_categories = sqlalchemy.Table('categories', meta, autoload=True, autoload_with=self.db.get_engine())
+        else:
+            self.db_categories = sqlalchemy.Table('categories', meta,
+                                                  sqlalchemy.Column('id', sqlalchemy.Text, primary_key=True),
+                                                  sqlalchemy.Column('name', sqlalchemy.Text, nullable=False),
+                                                  sqlalchemy.Column('parent', sqlalchemy.Text,
+                                                                    sqlalchemy.ForeignKey('categories.id')))
+        meta.create_all(self.db.engine)
 
 
-category_cache = providers.Singleton(CategoryCache, db=database)
-logger.info("Providing CategoryRepository dependency")
-category_repository.provided_by(
-    providers.Singleton(DbCategoryRepository, db=database, cache=category_cache))
+def init():
+    blackboard.category_cache = providers.Singleton(CategoryCache, db=blackboard.database)
+    logger.info("Providing CategoryRepository dependency")
+    category_repository.provided_by(
+        providers.Singleton(DbCategoryRepository, db=blackboard.database, cache=blackboard.category_cache))

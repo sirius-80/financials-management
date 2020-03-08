@@ -63,10 +63,10 @@ class MyInternalTransactionDetector(InternalTransactionDetector):
 
 class InternalTransactionsMapper(TransactionCategoryMapper):
     """Maps transactions between own accounts to the 'Overboekingen' category."""
-    DEFAULT_SCORE = 100
-    internal_transactions_detector = MyInternalTransactionDetector()
-    internal_transactions_category = category_repository().get_category_by_qualified_name(
-        "Overboekingen")
+    def __init__(self):
+        self.DEFAULT_SCORE = 100
+        self.internal_transactions_detector = MyInternalTransactionDetector()
+        self.internal_transactions_category = category_repository().get_category_by_qualified_name("Overboekingen")
 
     def get_category_scores(self, transaction):
         if self.internal_transactions_detector.is_internal_transaction(transaction):

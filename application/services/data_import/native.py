@@ -1,6 +1,7 @@
 import csv
 import itertools
 import logging
+import datetime
 
 from domain.account_management.model.account import account_repository, account_factory
 from domain.account_management.model.category import category_repository, category_factory
@@ -50,7 +51,7 @@ def import_transactions(filename):
         for row in reader:
             transaction_id = row["transaction_id"]
             amount = row["amount"]
-            date = row["date"]
+            date = datetime.datetime.strptime(row["date"], '%Y-%m-%d').date()
             name = row["name"]
             description = row["description"]
             balance_after = row["balance_after"]
