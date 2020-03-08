@@ -7,11 +7,9 @@ verify_ssl = true
 pylint = "*"
 
 [packages]
-bokeh = "*"
 pypubsub = "*"
 pytest = "*"
 dependency_injector = "*"
-pandas = "*"
 flask = "*"
 flask-jsonpify = "*"
 flask-restful = "*"
