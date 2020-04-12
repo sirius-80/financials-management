@@ -1,6 +1,7 @@
 from datetime import datetime
 import logging
 from decimal import Decimal
+from typing import List, Type
 
 from attr import dataclass
 from flask import Flask, request
@@ -49,15 +50,26 @@ class Category:
             self.parent = parent
 
 
+@dataclass
+class Category1:
+    id: str
+    name: str
+    parent: str
+
+    @staticmethod
+    def create(cat):
+        return Category1(cat.id, cat.name, cat.parent and cat.parent.id or None)
+
+
 class CategoryEncoder(JSONEncoder):
-    def default(self, cat):
-        if isinstance(cat, Category):
-            return {'id': cat.id, 'name': cat.name, 'parent': cat.parent}
+    def default(self, obj):
+        if isinstance(obj, Category):
+            return {'id': obj.id, 'name': obj.name, 'parent': obj.parent}
         else:
-            if hasattr(cat, '__dict__'):
-                return str(cat.__dict__)
+            if hasattr(obj, '__dict__'):
+                return str(obj.__dict__)
             else:
-                return str(cat)
+                return str(obj)
 
 
 @dataclass
@@ -67,10 +79,29 @@ class Transaction:
     account: str
     amount: Decimal
     name: str
-    category: Category
+    category: str
     description: str
     counter_account: str
     internal: bool
+    balance_after: Decimal
+
+    @staticmethod
+    def create(transaction):
+        return Transaction(transaction.id, transaction.date, transaction.account.name, transaction.amount, transaction.name,
+                           transaction.category and transaction.category.id or None,
+                           transaction.description, transaction.counter_account, transaction.internal, transaction.balance_after)
+
+
+@dataclass
+class Account:
+    id: str
+    name: str
+    bank: str
+    transactions: List[Transaction]
+
+    @staticmethod
+    def create(account):
+        return Account(account.id, account.name, account.bank, [Transaction.create(t).__dict__ for t in account.transactions])
 
 
 @app.route('/categories')
@@ -79,6 +110,15 @@ def get_categories():
                                                          cat in
                                                          category_repository().get_categories()]
     response = app.response_class(dumps(categories, cls=CategoryEncoder),
+                                  mimetype='application/json')
+    return response
+
+
+@app.route('/categories1')
+def get_categories1():
+    categories = [Category1(0, "None", None).__dict__] + [Category1.create(cat).__dict__ for
+                                                          cat in category_repository().get_categories()]
+    response = app.response_class(dumps(categories),
                                   mimetype='application/json')
     return response
 
@@ -92,7 +132,8 @@ def get_category_data(category_id):
                        month in date_list]
     response = app.response_class(
         response=dumps(
-            [Balance(date, amount).__dict__ for (date, amount) in zip(date_list, monthly_amounts)], cls=CategoryEncoder),
+            [Balance(date, amount).__dict__ for (date, amount) in zip(date_list, monthly_amounts)],
+            cls=CategoryEncoder),
         mimetype='application/json'
     )
     return response
@@ -124,7 +165,8 @@ def get_combined_category_data_for_period(parent_id=None):
         cat_data = {
             'name': cat.name,
             'value': abs(float(sum(
-                [float(t.amount) for t in application.services.get_transactions_for_category(start_date, end_date, cat)])))}
+                [float(t.amount) for t in
+                 application.services.get_transactions_for_category(start_date, end_date, cat)])))}
 
         if cat.children:
             cat_data['children'] = []
@@ -162,6 +204,19 @@ def get_combined_data():
     return response
 
 
+@app.route('/accounts')
+def get_accounts():
+    logger.info("Fetching account data")
+    accounts = account_repository().get_accounts()
+    response = app.response_class(
+        response=dumps(
+            [Account.create(a).__dict__ for a in accounts],
+            cls=CategoryEncoder),
+        mimetype='application/json'
+    )
+    return response
+
+
 @app.route('/transactions')
 def get_transactions():
     try:
@@ -181,7 +236,8 @@ def get_transactions():
     response = app.response_class(
         response=dumps(
             [Transaction(t.id, t.date, t.account.name, t.amount, t.name,
-                         t.category and Category(t.category.id, t.category.qualified_name, t.category.parent).__dict__ or None,
+                         t.category and Category(t.category.id, t.category.qualified_name,
+                                                 t.category.parent).__dict__ or None,
                          t.description, t.counter_account, t.internal).__dict__
              for t in transactions],
             cls=CategoryEncoder

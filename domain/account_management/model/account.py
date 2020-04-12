@@ -32,7 +32,7 @@ class Account(Entity):
                                 (t.date.month == date.month or mode != 'monthly')
                                 and t.date.year == date.year
                                 and (t.category == category or (t.category and t.category.inherits_from(category)))]
-        return sum([t.amount for t in matched_transactions])
+        return sum([float(t.amount) for t in matched_transactions])
 
     def get_combined_amount_for_category_in_month(self, category, date):
         """Returns the combined amount of transactions in the year and month specified by given date."""
