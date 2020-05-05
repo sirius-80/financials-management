@@ -54,7 +54,7 @@ class Category:
 class Category1:
     id: str
     name: str
-    parent: str
+    parentId: str
 
     @staticmethod
     def create(cat):
@@ -77,19 +77,22 @@ class Transaction:
     id: str
     date: datetime.date
     account: str
+    serial: int
     amount: Decimal
     name: str
-    category: str
+    categoryId: str
     description: str
-    counter_account: str
+    counterAccount: str
     internal: bool
-    balance_after: Decimal
+    balanceAfter: Decimal
 
     @staticmethod
     def create(transaction):
-        return Transaction(transaction.id, transaction.date, transaction.account.name, transaction.amount, transaction.name,
-                           transaction.category and transaction.category.id or None,
-                           transaction.description, transaction.counter_account, transaction.internal, transaction.balance_after)
+        return Transaction(transaction.id, transaction.date,  transaction.account.name, transaction.serial,
+                           transaction.amount, transaction.name,
+                           (transaction.category and transaction.category.id or None),
+                           transaction.description, transaction.counter_account, transaction.internal,
+                           transaction.balance_after)
 
 
 @dataclass
@@ -144,13 +147,13 @@ def get_combined_category_data_for_period(parent_id=None):
     try:
         start = request.args.get('start', None)
         start_date = datetime.fromtimestamp(int(float(start) / 1000)).date()
-    except ValueError:
+    except (ValueError, TypeError) as e:
         start_date = application.services.get_date_of_first_transaction()
 
     try:
         end = request.args.get('end', None)
         end_date = datetime.fromtimestamp(int(float(end) / 1000)).date()
-    except ValueError:
+    except (ValueError, TypeError) as e:
         end_date = application.services.get_date_of_last_transaction()
 
     logger.info("Returning transaction-date from %s to %s", start_date, end_date)
@@ -235,10 +238,11 @@ def get_transactions():
     transactions = application.services.get_transactions(start_date, end_date)
     response = app.response_class(
         response=dumps(
-            [Transaction(t.id, t.date, t.account.name, t.amount, t.name,
-                         t.category and Category(t.category.id, t.category.qualified_name,
-                                                 t.category.parent).__dict__ or None,
-                         t.description, t.counter_account, t.internal).__dict__
+            # [Transaction(t.id, t.date, t.account.name, t.serial, t.amount, t.name,
+            #              t.category and Category(t.category.id, t.category.qualified_name,
+            #                                      t.category.parent).__dict__ or None,
+            #              t.description, t.counter_account, t.internal, t.balance_after).__dict__
+            [Transaction.create(t).__dict__
              for t in transactions],
             cls=CategoryEncoder
         ),
@@ -269,12 +273,7 @@ def set_category(transaction_id):
     account_repository().save_transaction(transaction)
     # TODO: Fix threading issue!!! account_repository().save_transaction(transaction)
     return app.response_class(
-        response=dumps(Transaction(transaction.id, transaction.date, transaction.account.name, transaction.amount,
-                                   transaction.name, transaction.category and Category(transaction.category.id,
-                                                                                       transaction.category.qualified_name,
-                                                                                       transaction.category.parent).__dict__ or None,
-                                   transaction.description, transaction.counter_account,
-                                   transaction.internal).__dict__, cls=CategoryEncoder),
+        response=dumps(Transaction.create(transaction).__dict__, cls=CategoryEncoder),
         mimetype='application/json'
     )
 
