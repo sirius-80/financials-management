@@ -1,4 +1,5 @@
 import datetime
+import decimal
 import logging
 import os
 
@@ -17,7 +18,7 @@ def get_combined_balance_at(date):
     accounts = account_repository().get_accounts()
     balance = 0
     for account in accounts:
-        balance += account.get_balance_at(date)
+        balance += float(account.get_balance_at(date))
     return float(balance)
 
 
@@ -123,8 +124,8 @@ def get_income_expenses_profit_loss(date_list, mode='monthly'):
     income = []
     expenses = []
     for transaction_list in transactions:
-        income_transactions = [t.amount for t in transaction_list if t.amount > 0 and not t.internal]
-        expenses_transactions = [t.amount for t in transaction_list if t.amount < 0 and not t.internal]
+        income_transactions = [decimal.Decimal(str(t.amount)) for t in transaction_list if t.amount > 0 and not t.internal]
+        expenses_transactions = [decimal.Decimal(str(t.amount)) for t in transaction_list if t.amount < 0 and not t.internal]
         income.append(
             sum(income_transactions))
         expenses.append(

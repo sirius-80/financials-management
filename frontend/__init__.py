@@ -238,7 +238,7 @@ def get_transactions():
             [Transaction(t.id, t.date, t.account.name, t.amount, t.name,
                          t.category and Category(t.category.id, t.category.qualified_name,
                                                  t.category.parent).__dict__ or None,
-                         t.description, t.counter_account, t.internal).__dict__
+                         t.description, t.counter_account, t.internal, t.balance_after).__dict__
              for t in transactions],
             cls=CategoryEncoder
         ),

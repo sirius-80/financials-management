@@ -20,45 +20,45 @@ def generate_categories():
         ("Income", 0, "yearly"),
         ("Income::Salary", 2700, "monthly"),
         ("Expenses", 0, "yearly"),
-        ("Expenses::House", 0, "yearly"),
-        ("Expenses::House::Mortgage", -500, "monthly"),
-        ("Expenses::House::Maintenance", -1500, "yearly"),
-        ("Expenses::Household", 0, "yearly"),
-        ("Expenses::Household::Groceries", -400, "monthly"),
-        ("Expenses::Household::Personal care", -100, "monthly"),
-        ("Expenses::Household::Pets", -50, "monthly"),
-        ("Expenses::Transportation", 0, "yearly"),
-        ("Expenses::Transportation::Purchase", -12000, "5years"),
-        ("Expenses::Transportation::Fuel", -110, "monthly"),
-        ("Expenses::Transportation::Maintenance", -800, "yearly"),
-        ("Expenses::Transportation::Taxes", -40, "monthly"),
-        ("Expenses::Transportation::Parking", -8, "monthly"),
-        ("Expenses::Transportation::Public transportation", -80, "yearly"),
-        ("Expenses::Transportation::Insurance", -80, "monthly"),
-        ("Expenses::Medical", 0, "yearly"),
-        ("Expenses::Medical::Health insurance", -210, "monthly"),
-        ("Expenses::Medical::Medicines", -15, "monthly"),
-        ("Expenses::Medical::Dentist", -70, "yearly"),
-        ("Expenses::Leisure", 0, "yearly"),
-        ("Expenses::Leisure::Dining out", -15, "monthly"),
-        ("Expenses::Leisure::Vacation", -1400, "yearly"),
-        ("Expenses::Leisure::Hobbies", -400, "yearly"),
-        ("Expenses::Miscellaneous", 0, "yearly"),
-        ("Expenses::Miscellaneous::Charity", -11, "monthly"),
-        ("Expenses::Miscellaneous::Fines", -90, "yearly"),
-        ("Expenses::Clothes", -115, "monthly"),
-        ("Expenses::Insurance", 0, "yearly"),
-        ("Expenses::Insurance::Life insurance", -25, "monthly"),
-        ("Expenses::Insurance::Other Insurances", -175, "monthly"),
-        ("Expenses::Education", 0, "yearly"),
-        ("Expenses::Education::Books", -300, "yearly"),
-        ("Expenses::Education::Tuition fee", -2083, "yearly"),
+        ("Expenses::Wonen", 0, "yearly"),
+        ("Expenses::Wonen::Hypotheek", -500, "monthly"),
+        ("Expenses::Wonen::Onderhoud", -1500, "yearly"),
+        ("Expenses::Huishouden", 0, "yearly"),
+        ("Expenses::Huishouden::Boodschappen", -400, "monthly"),
+        ("Expenses::Huishouden::Persoonlijke verzorging", -100, "monthly"),
+        ("Expenses::Huishouden::Huisdieren", -50, "monthly"),
+        ("Expenses::Vervoer", 0, "yearly"),
+        ("Expenses::Vervoer::Aankopen", -12000, "5years"),
+        ("Expenses::Vervoer::Brandstof", -110, "monthly"),
+        ("Expenses::Vervoer::Onderhoud", -800, "yearly"),
+        ("Expenses::Vervoer::Wegenbelasting", -40, "monthly"),
+        ("Expenses::Vervoer::Parkeren", -8, "monthly"),
+        ("Expenses::Vervoer::Openbaar vervoer", -80, "yearly"),
+        ("Expenses::Vervoer::Verzekering", -80, "monthly"),
+        ("Expenses::Medische kosten", 0, "yearly"),
+        ("Expenses::Medische kosten::Ziektekostenverzekering", -210, "monthly"),
+        ("Expenses::Medische kosten::Medicijnen", -15, "monthly"),
+        ("Expenses::Medische kosten::Tandarts", -70, "yearly"),
+        ("Expenses::Vrije tijd", 0, "yearly"),
+        ("Expenses::Vrije tijd::Uit eten", -15, "monthly"),
+        ("Expenses::Vrije tijd::Vakantie", -1400, "yearly"),
+        ("Expenses::Vrije tijd::Hobbies", -400, "yearly"),
+        ("Expenses::Overigen", 0, "yearly"),
+        ("Expenses::Overigen::Goede doelen", -11, "monthly"),
+        ("Expenses::Overigen::Boetes", -90, "yearly"),
+        ("Expenses::Kleding", -115, "monthly"),
+        ("Expenses::Verzekeringen", 0, "yearly"),
+        ("Expenses::Verzekeringen::Levensverzekering", -25, "monthly"),
+        ("Expenses::Verzekeringen::Overige verzekeringen", -175, "monthly"),
+        ("Expenses::Educatie", 0, "yearly"),
+        ("Expenses::Educatie::Boeken", -300, "yearly"),
+        ("Expenses::Educatie::Collegegeld", -2083, "yearly"),
         ("Expenses::Telecom", 0, "yearly"),
         ("Expenses::Telecom::Internet", -60, "monthly"),
-        ("Expenses::Telecom::Mobile phone", -25, "monthly"),
-        ("Expenses::Uncategorized", 0, "yearly"),
-        ("Expenses::Uncategorized::To be classified", 0, "monthly"),
-        ("Transfers", 0, "monthly"),
+        ("Expenses::Telecom::Mobiele telefoon", -25, "monthly"),
+        ("Expenses::Ongecategoriseerd", 0, "yearly"),
+        ("Expenses::Ongecategoriseerd::Nog in te delen", 0, "monthly"),
+        ("Overboekingen", 0, "monthly"),
     ]
     for (qname, amount, frequency) in category_names:
         category = category_factory.create_category_from_qualified_name(qname)
@@ -87,10 +87,6 @@ account_factory = AccountFactory()
 
 def generate_year():
     pass
-
-
-"transaction_id,amount,date,name,description,balance_after,serial,counter_account,account,category"
-"38e140db7043480e9e880ab3b91e5751,-600,2012-01-01,M.A. SCHEPERS-EGBERINK E,,939.33,525,151418292,fb314661177f4c61b22db76bd20dd803,Overboekingen"
 
 
 def main(output_directory):
@@ -135,7 +131,7 @@ def create_transaction(category, year, month, account, serial):
     amount = category.amount + int(random.random() * category.amount * 0.5)
     date = datetime.date(year, month, 1)
     name = category.name
-    description = "payment for " + category.name
+    description = "Betaling voor " + category.name
     balance_after = account.get_balance_at(datetime.date(year, month, 2)) + amount
     counter = ""
     t = account_factory.create_transaction(account, date, amount, name, description, serial, counter, balance_after)
